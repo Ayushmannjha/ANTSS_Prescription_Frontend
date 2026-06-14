@@ -27,6 +27,24 @@ export interface DiagnosticTest {
   labName?: string;
 }
 
+export interface Investigation {
+  id: number | string;
+  investigationName: string;
+  createdAt?: string;
+}
+
+export interface TestRequested {
+  id: number | string;
+  testName: string;
+  createdAt?: string;
+}
+
+export interface Document {
+  id: number | string;
+  fileName: string;
+  url: string;
+}
+
 export interface Prescription {
   // Clinic & Doctor Info
   clinic: {
@@ -72,6 +90,11 @@ export interface Prescription {
     note?: string;
     date?: string;
   };
+
+  // New fields
+  investigations: Investigation[];
+  testRequested: TestRequested[];
+  documents: Document[];
 }
 
 // Default Clinic & Doctor Info matching the reference layout
@@ -235,12 +258,33 @@ export function convertPatientDataToPrescription(
     allergies.push(patientData.allergies);
   }
 
+  // Also check pastMedicalHistories array
+  if (patientData.pastMedicalHistories && patientData.pastMedicalHistories.length > 0) {
+    patientData.pastMedicalHistories.forEach((pmh: any) => {
+      if (pmh.allergies) {
+        allergies.push(pmh.allergies);
+      }
+    });
+  }
+
   const pastHistory: string[] = [];
   if (patientData.medicalHistory) {
     pastHistory.push(patientData.medicalHistory);
   }
   if (patientData.currentMedications) {
     pastHistory.push(`Current Medications: ${patientData.currentMedications}`);
+  }
+
+  // Also check pastMedicalHistories array
+  if (patientData.pastMedicalHistories && patientData.pastMedicalHistories.length > 0) {
+    patientData.pastMedicalHistories.forEach((pmh: any) => {
+      if (pmh.medicalHistory) {
+        pastHistory.push(pmh.medicalHistory);
+      }
+      if (pmh.currentMedicine) {
+        pastHistory.push(`Current Medications: ${pmh.currentMedicine}`);
+      }
+    });
   }
 
   // Convert diagnosis
@@ -254,17 +298,32 @@ export function convertPatientDataToPrescription(
   // Convert medicines
   const medicines: Medicine[] = patientData.medicines?.map((m: any) => ({
     id: m.id || Math.random().toString(36).substr(2, 9),
-    genericName: m.name || "Unknown Medicine",
-    brandName: m.name,
-    dosage: m.dose || "---",
+    genericName: m.medicineName || m.name || "Unknown Medicine",
+    brandName: m.medicineName || m.name,
+    dosage: m.dosage || m.dose || "---",
     frequency: m.frequency || "---",
     instructions: m.instructions || "",
     duration: m.duration || "---"
   })) || [];
 
-  // Convert diagnostics/tests
+  // Convert diagnostics/tests from testRequested array
   const diagnostics: DiagnosticTest[] = [];
-  if (patientData.testsRequested) {
+  
+  // From testRequested array (new structure)
+  if (patientData.testRequested && patientData.testRequested.length > 0) {
+    patientData.testRequested.forEach((tr: any, i: number) => {
+      if (tr.testName) {
+        diagnostics.push({
+          id: tr.id || `test-${i}`,
+          name: tr.testName,
+          priority: "routine"
+        });
+      }
+    });
+  }
+  
+  // Fallback to old testsRequested string field
+  if (patientData.testsRequested && typeof patientData.testsRequested === 'string') {
     patientData.testsRequested.split(',').forEach((test: string, i: number) => {
       const trimmed = test.trim();
       if (trimmed) {
@@ -274,6 +333,18 @@ export function convertPatientDataToPrescription(
           priority: "routine"
         });
       }
+    });
+  }
+
+  // Convert documents array
+  const documents: Document[] = [];
+  if (patientData.documents && patientData.documents.length > 0) {
+    patientData.documents.forEach((doc: any, i: number) => {
+      documents.push({
+        id: doc.id || `doc-${i}`,
+        fileName: doc.fileName,
+        url: doc.url
+      });
     });
   }
 
@@ -327,7 +398,16 @@ export function convertPatientDataToPrescription(
     medicines,
     diagnostics,
     advice,
-    followUp
+    followUp,
+    investigations,
+    testRequested: patientData.testRequested && patientData.testRequested.length > 0 
+      ? patientData.testRequested.map((tr: any, i: number) => ({
+          id: tr.id || `test-${i}`,
+          testName: tr.testName,
+          createdAt: tr.createdAt
+        }))
+      : diagnostics.map(d => ({ id: d.id, testName: d.name })), // For backward compatibility
+    documents
   };
 }
 
