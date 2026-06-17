@@ -54,6 +54,7 @@ const convertToPatientFormData = (patient: any): PatientData => {
   return {
     registrationId: patient.registrationId || null,
     registrationNumber: patient.registrationNumber || null,
+    patientId: Number(patient.id) || Number(patient.patientId) || null,
     name: patient.name,
     age: patient.age,
     gender: patient.gender,
@@ -198,6 +199,7 @@ export default function ConsultationPage() {
     const mappedData: PatientData = {
       registrationId: c.registrationId || null,
       registrationNumber: c.registrationNumber || originalPatient?.registrationNumber || null,
+      patientId: Number(originalPatient?.id) || Number(originalPatient?.patientId) || Number(c.patientId) || null,
       name: originalPatient?.name || c.patientName || "",
       age: originalPatient?.age || c.age || 0,
       gender: originalPatient?.gender || c.gender || "Male",

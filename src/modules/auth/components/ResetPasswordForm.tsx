@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Loader2, Lock, Eye, EyeOff, CheckCircle2, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -13,16 +13,21 @@ interface ResetPasswordFormProps {
 }
 
 export default function ResetPasswordForm({ token, onSuccess, onCancel }: ResetPasswordFormProps) {
+  const [resetToken, setResetToken] = useState(token || "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [errors, setErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
+  const [errors, setErrors] = useState<{ token?: string; newPassword?: string; confirmPassword?: string }>({});
 
   const validate = () => {
-    const tempErrors: { newPassword?: string; confirmPassword?: string } = {};
+    const tempErrors: { token?: string; newPassword?: string; confirmPassword?: string } = {};
+
+    if (!resetToken) {
+      tempErrors.token = "Reset token is required";
+    }
 
     if (!newPassword) {
       tempErrors.newPassword = "New password is required";
@@ -44,15 +49,10 @@ export default function ResetPasswordForm({ token, onSuccess, onCancel }: ResetP
     e.preventDefault();
     if (!validate()) return;
 
-    if (!token) {
-      toast.error("Reset token is missing. Please request a new link.");
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const response: any = await apiClient.post("/api/auth/reset-password", {
-        token,
+        token: resetToken,
         newPassword,
         confirmPassword,
       });
@@ -111,6 +111,32 @@ export default function ResetPasswordForm({ token, onSuccess, onCancel }: ResetP
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Reset Token Field */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-neutral-700">Reset Token</label>
+          <div className="relative">
+            <Key className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+            <Input
+              type="text"
+              value={resetToken}
+              onChange={(e) => {
+                setResetToken(e.target.value);
+                if (errors.token) setErrors((prev) => ({ ...prev, token: undefined }));
+              }}
+              placeholder="Enter the token from your email"
+              disabled={isSubmitting}
+              className={`h-[56px] pl-12 pr-4 rounded-xl border shadow-none transition-all duration-300 focus-visible:ring-4 ${
+                errors.token
+                  ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-100"
+                  : "border-neutral-200 focus-visible:border-[#b30d0d] focus-visible:ring-red-100"
+              }`}
+            />
+          </div>
+          {errors.token && (
+            <p className="text-xs text-red-500 font-medium pl-1">{errors.token}</p>
+          )}
+        </div>
+
         <div className="space-y-2">
           <label className="block text-sm font-medium text-neutral-700">New Password</label>
           <div className="relative">

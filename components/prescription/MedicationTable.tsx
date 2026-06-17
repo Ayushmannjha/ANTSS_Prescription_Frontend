@@ -74,21 +74,18 @@ export const MedicationTable: React.FC<MedicationTableProps> = ({ medicines }) =
                 <tr key={med.id || index} className="border-b border-slate-200 text-[11px] text-slate-800 align-top">
                   {/* Name Column */}
                   <td className="py-2.5 pr-4">
-                    <div className="font-bold text-slate-900">{index + 1}) {med.brandName?.toUpperCase() || med.genericName?.toUpperCase()}</div>
-                    {/* Generic Composition in small blue capital text */}
-                    {med.genericName && med.genericName !== med.brandName && (
-                      <div className="text-[9px] text-blue-600 font-bold uppercase mt-0.5 tracking-wide">
-                        {med.genericName}
-                      </div>
-                    )}
+                    <div className="font-bold text-slate-900">{index + 1}) {med.genericName?.toUpperCase()}</div>
                   </td>
                   
                   {/* Dosage Column */}
                   <td className="py-2.5 pr-4">
-                    <div className="font-semibold text-slate-900">{formatFrequency(med.frequency)}</div>
+                    {med.dosage && med.dosage !== "---" && (
+                      <div className="font-bold text-slate-900">{med.dosage}</div>
+                    )}
+                    <div className="font-semibold text-slate-700">{formatFrequency(med.frequency)}</div>
                     {med.instructions && (
-                      <div className="text-[10px] text-slate-500 mt-0.5 italic">
-                        ({med.instructions})
+                      <div className="text-[11px] text-slate-600 mt-0.5">
+                        {med.instructions}
                       </div>
                     )}
                   </td>
@@ -96,9 +93,9 @@ export const MedicationTable: React.FC<MedicationTableProps> = ({ medicines }) =
                   {/* Duration Column */}
                   <td className="py-2.5">
                     <div className="font-semibold text-slate-900">{med.duration}</div>
-                    {totalQty !== null && (
-                      <div className="text-[10px] text-slate-500 mt-0.5">
-                        (Tot: {totalQty} Tab)
+                    {med.quantity && (
+                      <div className="text-[11px] text-slate-600 mt-0.5">
+                        Qty: {med.quantity}
                       </div>
                     )}
                   </td>

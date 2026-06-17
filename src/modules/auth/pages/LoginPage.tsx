@@ -192,7 +192,7 @@ function LoginContent() {
               )}
 
               {view === "forgot-password" && (
-                <ForgotPasswordForm onBackToLogin={showLogin} />
+                <ForgotPasswordForm onBackToLogin={showLogin} onSuccess={() => setView("reset-password")} />
               )}
 
               {view === "reset-password" && (

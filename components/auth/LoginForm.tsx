@@ -23,6 +23,8 @@ export default function LoginForm({ onForgotPasswordClick, onRegisterClick }: Lo
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
 
+  const [apiError, setApiError] = useState<string>("")
+
   const validate = () => {
     const tempErrors: { email?: string; password?: string } = {}
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -45,6 +47,7 @@ export default function LoginForm({ onForgotPasswordClick, onRegisterClick }: Lo
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setApiError("")
     if (!validate()) return
 
     setIsSubmitting(true)
@@ -66,10 +69,14 @@ export default function LoginForm({ onForgotPasswordClick, onRegisterClick }: Lo
         toast.success("Login successful! Redirecting...")
         router.push("/patients")
       } else {
-        toast.error(response.message || "Login failed")
+        const errorMsg = response.message || "Login failed"
+        setApiError(errorMsg)
+        toast.error(errorMsg)
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to log in. Please check your credentials.")
+      const errorMsg = err.message || "Failed to log in. Please check your credentials."
+      setApiError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsSubmitting(false)
     }
@@ -178,6 +185,12 @@ export default function LoginForm({ onForgotPasswordClick, onRegisterClick }: Lo
           Forgot Password?
         </button>
       </div>
+
+      {apiError && (
+        <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100 flex items-center justify-center text-center">
+          {apiError}
+        </div>
+      )}
 
       {/* Login button */}
       <Button

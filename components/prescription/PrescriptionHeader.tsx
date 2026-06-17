@@ -37,10 +37,10 @@ export const PrescriptionHeader: React.FC<PrescriptionHeaderProps> = ({ clinic, 
       {/* Right Column: Clinic Details */}
       <div className="w-[38%] text-right">
         <h1 className="text-xl font-bold text-blue-600 leading-tight uppercase">{clinic.name}</h1>
-        <p className="text-[11px] text-slate-800 mt-1 leading-normal">{clinic.address}</p>
+        {clinic.address && <p className="text-[11px] text-slate-800 mt-1 leading-normal">{clinic.address}</p>}
         <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
-          Ph: {clinic.phone} <br />
-          {clinic.timings || "Timing: 09:00 AM - 01:00 PM, 06:00 PM - 08:00 PM | Closed: Sunday"}
+          {clinic.phone && <span>Ph: {clinic.phone} <br /></span>}
+          {clinic.timings && <span>{clinic.timings}</span>}
         </p>
       </div>
     </div>

@@ -38,7 +38,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function PatientListPage() {
   const router = useRouter();
-  const { isAuthenticated, initialize } = useAuthStore();
+  const { isAuthenticated, initialize, logout } = useAuthStore();
   const { patients, fetchPatients } = usePatientStore();
   const { savePrescription } = usePrescriptionStore();
 
@@ -245,7 +245,7 @@ export default function PatientListPage() {
           </div>
 
           <nav className="flex items-center gap-4">
-            <a href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/doctor" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Dashboard
             </a>
             <a href="/patients" className="text-sm font-medium text-primary">
@@ -254,6 +254,15 @@ export default function PatientListPage() {
             <a href="/medicine-master" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Medicine Master
             </a>
+            <a href="/doctor/profile" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Profile
+            </a>
+            <button
+              onClick={() => logout()}
+              className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
+            >
+              Logout
+            </button>
           </nav>
         </div>
       </header>

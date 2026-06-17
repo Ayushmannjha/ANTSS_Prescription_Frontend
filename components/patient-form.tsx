@@ -37,7 +37,6 @@ export type {
 }
 
 import MedicinesPage from "./patient-form-fields/MedicinesPage"
-import BillingPage from "./patient-form-fields/BillingPage"
 import QuickNotesPage from "./patient-form-fields/QuickNotesPage"
 import InvestigationsPage from "./patient-form-fields/InvestigationsPage"
 import TestRequestedPage from "./patient-form-fields/TestRequestedPage"
@@ -515,24 +514,23 @@ export function PatientForm({
               registerFieldRef={registerFieldRef}
             />
 
-            {/* Diagnosis & Plan Row */}
-            <div className="grid gap-2 xl:grid-cols-2">
-              <DiagnosisPage
-                data={data}
-                addDiagnosis={addDiagnosis}
-                removeDiagnosis={removeDiagnosis}
-                updateDiagnosis={updateDiagnosis}
-                isHighlighted={isHighlighted}
-                wrapWithMic={wrapWithMic}
-              />
+            {/* Diagnosis Section */}
+            <DiagnosisPage
+              data={data}
+              addDiagnosis={addDiagnosis}
+              removeDiagnosis={removeDiagnosis}
+              updateDiagnosis={updateDiagnosis}
+              isHighlighted={isHighlighted}
+              wrapWithMic={wrapWithMic}
+            />
 
-              <PlanPage
-                data={data}
-                updateField={updateField}
-                inputClass={inputClass}
-                wrapWithMic={wrapWithMic}
-              />
-            </div>
+            {/* Plan Section */}
+            <PlanPage
+              data={data}
+              updateField={updateField}
+              inputClass={inputClass}
+              wrapWithMic={wrapWithMic}
+            />
 
             {/* Investigations Section */}
             <InvestigationsPage
@@ -573,14 +571,6 @@ export function PatientForm({
               applyMedicineMaster={applyMedicineMaster}
               inputClass={inputClass}
               isHighlighted={isHighlighted}
-              wrapWithMic={wrapWithMic}
-            />
-
-            {/* Billing Section (Administrative) */}
-            <BillingPage
-              data={data}
-              updateField={updateField}
-              inputClass={inputClass}
               wrapWithMic={wrapWithMic}
             />
 

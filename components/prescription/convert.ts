@@ -12,7 +12,8 @@ const defaultDoctorInfo = {
   name: "Dr. Akshara",
   qualification: "M.S.",
   registrationNo: "MMC 2018",
-  specialization: "General Physician"
+  specialization: "General Physician",
+  signatureUrl: ""
 };
 
 export function convertPatientDataToPrescription(
@@ -29,157 +30,152 @@ export function convertPatientDataToPrescription(
     year: 'numeric' 
   }).replace(/ /g, '-');
   
+  const consultation = patientData.consultation || patientData;
+
   // Convert vitals
   const vitals: MappedVital[] = [];
-  if (patientData.bloodPressureSystolic || patientData.bloodPressureDiastolic) {
+  if (consultation.bp || consultation.bloodPressureSystolic || consultation.bloodPressureDiastolic) {
     vitals.push({
       label: "Blood Pressure",
-      value: `${patientData.bloodPressureSystolic || '---'}/${patientData.bloodPressureDiastolic || '---'}`,
+      value: consultation.bp || `${consultation.bloodPressureSystolic || '---'}/${consultation.bloodPressureDiastolic || '---'}`,
       unit: "mmHg"
     });
   }
-  if (patientData.pulse) {
-    vitals.push({
-      label: "Pulse",
-      value: patientData.pulse.toString(),
-      unit: "bpm"
-    });
+  if (consultation.pulse) {
+    vitals.push({ label: "Pulse", value: consultation.pulse.toString(), unit: "bpm" });
   }
-  if (patientData.temperature) {
-    vitals.push({
-      label: "Temperature",
-      value: patientData.temperature.toString(),
-      unit: "°F"
-    });
+  if (consultation.temperature) {
+    vitals.push({ label: "Temperature", value: consultation.temperature.toString(), unit: "°F" });
   }
-  if (patientData.oxygenSaturation) {
-    vitals.push({
-      label: "SpO2",
-      value: patientData.oxygenSaturation.toString(),
-      unit: "%"
-    });
+  if (consultation.oxygenSaturation || consultation.spo2) {
+    vitals.push({ label: "SpO2", value: (consultation.oxygenSaturation || consultation.spo2).toString(), unit: "%" });
   }
-  if (patientData.weight) {
-    vitals.push({
-      label: "Weight",
-      value: patientData.weight.toString(),
-      unit: "kg"
-    });
+  if (consultation.weight) {
+    vitals.push({ label: "Weight", value: consultation.weight.toString(), unit: "kg" });
   }
-  if (patientData.height) {
-    vitals.push({
-      label: "Height",
-      value: patientData.height.toString(),
-      unit: "cm"
-    });
+  if (consultation.height) {
+    vitals.push({ label: "Height", value: consultation.height.toString(), unit: "cm" });
+  }
+  if (consultation.respiratoryRate) {
+    vitals.push({ label: "Resp Rate", value: consultation.respiratoryRate.toString(), unit: "bpm" });
   }
 
   // Convert complaints
   const chiefComplaints: string[] = [];
-  if (patientData.complaints && patientData.complaints.length > 0) {
-    patientData.complaints.forEach((c: any) => {
-      if (c.complaint || c.complaintName) {
-        const name = c.complaint || c.complaintName;
+  if (consultation.complaints && consultation.complaints.length > 0) {
+    consultation.complaints.forEach((c: any) => {
+      const name = c.complaint || c.complaintName;
+      if (name) {
         let str = name.toUpperCase();
         const details = [];
         if (c.severity) details.push(c.severity.toUpperCase());
         if (c.frequency || c.complaintFrequency) details.push((c.frequency || c.complaintFrequency).toUpperCase());
         if (c.duration || c.complaintDuration) details.push((c.duration || c.complaintDuration).toUpperCase());
-        if (details.length > 0) {
-          str += ` (${details.join(', ')})`;
-        }
+        if (details.length > 0) str += ` (${details.join(', ')})`;
         chiefComplaints.push(str);
       }
     });
-  } else if (patientData.chiefComplaint) {
-    chiefComplaints.push(patientData.chiefComplaint.toUpperCase());
+  } else if (consultation.complaintName) {
+    let str = consultation.complaintName.toUpperCase();
+    const details = [];
+    if (consultation.severity) details.push(consultation.severity.toUpperCase());
+    if (consultation.complaintFrequency) details.push(consultation.complaintFrequency.toUpperCase());
+    if (consultation.complaintDuration) details.push(consultation.complaintDuration.toUpperCase());
+    if (details.length > 0) str += ` (${details.join(', ')})`;
+    chiefComplaints.push(str);
+  } else if (consultation.chiefComplaint) {
+    chiefComplaints.push(consultation.chiefComplaint.toUpperCase());
   }
 
   // Convert general examination to Clinical Findings
   const clinicalFindings: string[] = [];
-  if (patientData.generalExamination) {
-    patientData.generalExamination.split('\n').forEach((line: string) => {
+  if (consultation.generalExamination) {
+    consultation.generalExamination.split('\n').forEach((line: string) => {
       const trimmed = line.trim();
-      if (trimmed) {
-        clinicalFindings.push(trimmed.toUpperCase());
-      }
+      if (trimmed) clinicalFindings.push(trimmed.toUpperCase());
     });
   }
 
   // Convert allergies and history
   const allergies: string[] = [];
-  if (patientData.allergies) {
-    allergies.push(patientData.allergies);
-  }
-
-  if (patientData.pastMedicalHistories && patientData.pastMedicalHistories.length > 0) {
-    patientData.pastMedicalHistories.forEach((pmh: any) => {
-      if (pmh.allergies) {
-        allergies.push(pmh.allergies);
-      }
+  if (consultation.allergies) allergies.push(consultation.allergies);
+  if (consultation.pastMedicalHistories && consultation.pastMedicalHistories.length > 0) {
+    consultation.pastMedicalHistories.forEach((pmh: any) => {
+      if (pmh.allergies) allergies.push(pmh.allergies);
     });
   }
 
   const pastHistory: string[] = [];
-  if (patientData.medicalHistory) {
-    pastHistory.push(patientData.medicalHistory);
+  if (consultation.medicalHistory) pastHistory.push(consultation.medicalHistory);
+  if (consultation.currentMedicine || consultation.currentMedications) {
+    pastHistory.push(`Current Medications: ${consultation.currentMedicine || consultation.currentMedications}`);
   }
-  if (patientData.currentMedications) {
-    pastHistory.push(`Current Medications: ${patientData.currentMedications}`);
-  }
-
-  if (patientData.pastMedicalHistories && patientData.pastMedicalHistories.length > 0) {
-    patientData.pastMedicalHistories.forEach((pmh: any) => {
-      if (pmh.medicalHistory) {
-        pastHistory.push(pmh.medicalHistory);
-      }
-      if (pmh.currentMedicine) {
-        pastHistory.push(`Current Medications: ${pmh.currentMedicine}`);
-      }
+  if (consultation.pastMedicalHistories && consultation.pastMedicalHistories.length > 0) {
+    consultation.pastMedicalHistories.forEach((pmh: any) => {
+      if (pmh.medicalHistory) pastHistory.push(pmh.medicalHistory);
+      if (pmh.currentMedicine) pastHistory.push(`Current Medications: ${pmh.currentMedicine}`);
     });
   }
 
   // Convert diagnosis
   let diagnosis = "";
-  if (patientData.diagnoses && patientData.diagnoses.length > 0) {
-    diagnosis = patientData.diagnoses.map((d: any) => {
+  if (consultation.diagnoses && consultation.diagnoses.length > 0) {
+    diagnosis = consultation.diagnoses.map((d: any) => {
       const name = d.diagnosis || d.diagnosisName || "";
       const code = d.snomedCode || d.diagnosisCode || "";
       return `${name.toUpperCase()}${code ? ` (${code})` : ''}`;
     }).join(", ");
+  } else if (consultation.diagnosisName) {
+    diagnosis = `${consultation.diagnosisName.toUpperCase()}${consultation.diagnosisCode ? ` (${consultation.diagnosisCode})` : ''}`;
   }
 
   // Convert medicines
-  const medicines: MappedMedicine[] = patientData.medicines?.map((m: any, idx: number) => ({
-    id: m.id || idx,
-    genericName: m.medicineName || m.name || "Unknown Medicine",
-    brandName: m.medicineName || m.name,
-    dosage: m.dosage || m.dose || "---",
-    frequency: m.frequency || "---",
-    instructions: m.instruction || m.instructions || "",
-    duration: m.duration || "---",
-    quantity: m.quantity
-  })) || [];
+  const medicines: MappedMedicine[] = patientData.medicines?.map((m: any, idx: number) => {
+    let name = m.medicineName || m.name || "Unknown Medicine";
+    if (m.strength) {
+      name += ` ${m.strength}`;
+    }
+    return {
+      id: m.prescriptionMedicineId || m.id || idx,
+      genericName: name,
+      brandName: m.medicineName || m.name,
+      dosage: m.dosage || m.dose || "---",
+      frequency: m.frequency || "---",
+      instructions: m.instruction || m.instructions || "",
+      duration: m.duration || "---",
+      quantity: m.quantity
+    };
+  }) || [];
 
   // Convert diagnostics/tests from testRequested array
   const diagnostics: MappedTest[] = [];
-  if (patientData.testRequested && patientData.testRequested.length > 0) {
-    patientData.testRequested.forEach((tr: any, i: number) => {
-      if (tr.testName) {
+  const testsSource = patientData.testRequested || patientData.investigations || consultation.testRequested || consultation.investigations;
+  if (testsSource && testsSource.length > 0) {
+    testsSource.forEach((tr: any, i: number) => {
+      const name = tr.testName || tr.investigationName || tr.name;
+      if (name) {
         diagnostics.push({
           id: tr.id || `test-${i}`,
-          name: tr.testName
+          name: name
         });
       }
     });
   }
   
-  if (patientData.testsRequested && typeof patientData.testsRequested === 'string') {
-    patientData.testsRequested.split(',').forEach((test: string, i: number) => {
+  if (patientData.investigations && patientData.investigations.length > 0 && testsSource !== patientData.investigations) {
+    patientData.investigations.forEach((inv: any, i: number) => {
+      if (inv.investigationName) {
+        diagnostics.push({ id: inv.id || `inv-${i}`, name: inv.investigationName });
+      }
+    });
+  }
+
+  if (consultation.testsRequested && typeof consultation.testsRequested === 'string') {
+    consultation.testsRequested.split(',').forEach((test: string, i: number) => {
       const trimmed = test.trim();
       if (trimmed) {
         diagnostics.push({
-          id: `test-${i}`,
+          id: `test-str-${i}`,
           name: trimmed
         });
       }
@@ -188,8 +184,8 @@ export function convertPatientDataToPrescription(
 
   // Convert advice
   const advice: string[] = [];
-  if (patientData.advice) {
-    patientData.advice.split('\n').forEach((line: string) => {
+  if (consultation.advice) {
+    consultation.advice.split('\n').forEach((line: string) => {
       const trimmed = line.trim();
       if (trimmed) advice.push(trimmed.toUpperCase());
     });
@@ -197,14 +193,22 @@ export function convertPatientDataToPrescription(
 
   // Convert follow-up
   let followUp = undefined;
-  if (patientData.followUp) {
-    const days = parseInt(patientData.followUp) || 5;
+  if (consultation.followUpDate) {
+    const fDate = new Date(consultation.followUpDate);
+    const formatted = fDate.toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric'
+    }).replace(/ /g, '-');
+    followUp = {
+      days: 0,
+      note: "",
+      date: formatted
+    };
+  } else if (consultation.followUp) {
+    const days = parseInt(consultation.followUp) || 5;
     const dateObj = new Date();
     dateObj.setDate(dateObj.getDate() + days);
     const formattedFollowUpDate = dateObj.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+      day: '2-digit', month: 'short', year: 'numeric'
     }).replace(/ /g, '-');
     
     followUp = {
@@ -214,19 +218,35 @@ export function convertPatientDataToPrescription(
     };
   }
 
+  const dynamicClinicInfo = {
+    name: consultation.clinicName || consultation.hospitalName || clinicInfo?.name || defaultClinicInfo.name,
+    address: consultation.clinicAddress || consultation.hospitalAddress || clinicInfo?.address || defaultClinicInfo.address,
+    phone: consultation.clinicPhone || consultation.hospitalPhone || clinicInfo?.phone || defaultClinicInfo.phone,
+    timings: clinicInfo?.timings || "",
+    logo: clinicInfo?.logo || "/_DOCTOR.jpeg"
+  };
+
+  const dynamicDoctorInfo = {
+    name: consultation.doctorName || doctorInfo?.name || defaultDoctorInfo.name,
+    qualification: consultation.qualification || doctorInfo?.qualification || defaultDoctorInfo.qualification,
+    registrationNo: consultation.doctorRegistrationNo || doctorInfo?.registrationNo || defaultDoctorInfo.registrationNo,
+    specialization: consultation.specialization || doctorInfo?.specialization || defaultDoctorInfo.specialization,
+    signatureUrl: consultation.doctorSignatureUrl || doctorInfo?.signatureUrl
+  };
+
   return {
-    prescriptionId: Number(patientData.prescriptionId) || 0,
-    clinic: clinicInfo || defaultClinicInfo,
-    doctor: doctorInfo || defaultDoctorInfo,
+    prescriptionId: Number(patientData.prescriptionId || consultation.consultationId) || 0,
+    clinic: dynamicClinicInfo,
+    doctor: dynamicDoctorInfo,
     patient: {
-      id: patientData.registrationNumber || patientData.registrationId?.toString() || `RX-${visitDateObj.getTime().toString().slice(-6)}`,
-      name: patientData.name || "Unknown Patient",
-      age: patientData.age || 0,
-      gender: patientData.gender || "Other",
-      contactNumber: patientData.contactNumber || undefined,
+      id: consultation.registrationNumber || consultation.registrationId?.toString() || `RX-${visitDateObj.getTime().toString().slice(-6)}`,
+      name: consultation.patientName || consultation.name || "Unknown Patient",
+      age: consultation.age || 0,
+      gender: consultation.gender || "Other",
+      contactNumber: consultation.mobileNumber || consultation.contactNumber || undefined,
       visitDate: formattedVisitDate,
-      prescriptionId: patientData.registrationNumber || patientData.registrationId?.toString() || `RX-${visitDateObj.getTime().toString().slice(-6)}`,
-      address: patientData.address || "PUNE"
+      prescriptionId: consultation.registrationNumber || consultation.registrationId?.toString() || `RX-${visitDateObj.getTime().toString().slice(-6)}`,
+      address: consultation.patientAddress || consultation.address || ""
     },
     vitals,
     chiefComplaints,
@@ -238,6 +258,6 @@ export function convertPatientDataToPrescription(
     testsRecommended: diagnostics,
     advice,
     followUp,
-    additionalNotes: patientData.quickNotes
+    additionalNotes: patientData.notes || consultation.quickNotes || patientData.quickNotes
   };
 }

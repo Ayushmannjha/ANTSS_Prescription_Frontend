@@ -19,6 +19,7 @@ export default function LoginForm({ onForgotPasswordClick }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [apiError, setApiError] = useState<string>("");
 
   const validate = () => {
     const tempErrors: { email?: string; password?: string } = {};
@@ -42,6 +43,7 @@ export default function LoginForm({ onForgotPasswordClick }: LoginFormProps) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError("");
     if (!validate()) return;
 
     setIsSubmitting(true);
@@ -60,10 +62,20 @@ export default function LoginForm({ onForgotPasswordClick }: LoginFormProps) {
         toast.success("Login successful! Redirecting...");
         router.push("/patients");
       } else {
-        toast.error(response.message || "Login failed");
+        const errorMsg = response.message || "Login failed";
+        setApiError(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to log in. Please check your credentials.");
+      let errorMsg = err.message || "Failed to log in. Please check your credentials.";
+      
+      // Axios or custom ApiError might return a generic 401 message
+      if (err.status === 401 || errorMsg.includes("401")) {
+        errorMsg = "Invalid email or password";
+      }
+      
+      setApiError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -143,6 +155,12 @@ export default function LoginForm({ onForgotPasswordClick }: LoginFormProps) {
           Forgot Password?
         </button>
       </div>
+
+      {apiError && (
+        <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100 flex items-center justify-center text-center">
+          {apiError}
+        </div>
+      )}
 
       <Button
         type="submit"
