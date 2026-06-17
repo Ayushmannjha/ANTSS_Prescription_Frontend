@@ -443,6 +443,9 @@ export function PatientDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => window.location.href = "/patients"} className="text-muted-foreground mr-2">
+              Back to Patients
+            </Button>
             <Button variant="outline" size="sm" onClick={handleReset}>
               <RotateCcw className="mr-2 h-4 w-4" />
               Reset

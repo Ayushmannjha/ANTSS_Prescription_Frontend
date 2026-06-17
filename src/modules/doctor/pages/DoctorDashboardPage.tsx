@@ -48,12 +48,13 @@ export default function DoctorDashboardPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const docProfile = await doctorService.getDoctorProfile().catch(() => ({
+        const res = await doctorService.getDoctorProfile().catch(() => null);
+        const docProfile = res?.data || res || {
           doctorName: user?.name || "Dr. Rajesh Kumar",
           specialization: "General Physician",
           qualification: "MBBS, MD",
           doctorCode: "REG-99382",
-        }));
+        };
         setProfile(docProfile);
 
         const appts = await appointmentService.getAppointments();
@@ -150,6 +151,9 @@ export default function DoctorDashboardPage() {
             </Link>
             <Link href="/medicine-master" className="text-sm font-medium hover:text-primary transition-colors">
               Medicine Master
+            </Link>
+            <Link href="/doctor/profile" className="text-sm font-medium hover:text-primary transition-colors">
+              Profile
             </Link>
           </nav>
         </div>

@@ -8,9 +8,10 @@ import { apiClient } from "@/src/services/axios";
 
 interface ForgotPasswordFormProps {
   onBackToLogin: () => void;
+  onSuccess?: () => void;
 }
 
-export default function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
+export default function ForgotPasswordForm({ onBackToLogin, onSuccess }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -67,18 +68,30 @@ export default function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordForm
         <div className="space-y-2">
           <h3 className="text-2xl font-semibold text-neutral-900">Check your email</h3>
           <p className="text-sm text-neutral-500 max-w-[340px] mx-auto leading-relaxed">
-            We have sent a password reset link to <span className="font-semibold text-neutral-800">{email}</span>. Please check your inbox and spam folder.
+            We have sent a password reset token to <span className="font-semibold text-neutral-800">{email}</span>. Please check your inbox and spam folder.
           </p>
         </div>
 
-        <Button
-          type="button"
-          onClick={onBackToLogin}
-          className="w-full h-[54px] rounded-xl border border-neutral-200 bg-white text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 transition flex items-center justify-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Login
-        </Button>
+        <div className="space-y-3 pt-2">
+          {onSuccess && (
+            <Button
+              type="button"
+              onClick={onSuccess}
+              className="w-full h-[56px] rounded-xl bg-gradient-to-r from-[#b30d0d] to-[#d11b1b] text-base font-medium text-white shadow-lg shadow-red-500/10 transition-all duration-300 hover:scale-[1.01] hover:from-[#9f0b0b] hover:to-[#c91515]"
+            >
+              Enter Reset Token
+            </Button>
+          )}
+
+          <Button
+            type="button"
+            onClick={onBackToLogin}
+            className="w-full h-[54px] rounded-xl border border-neutral-200 bg-white text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 transition flex items-center justify-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Login
+          </Button>
+        </div>
       </motion.div>
     );
   }
