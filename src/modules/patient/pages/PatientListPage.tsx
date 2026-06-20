@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -38,12 +39,11 @@ import { Badge } from "@/components/ui/badge";
 
 export default function PatientListPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, initialize, logout } = useAuthStore();
-  const { patients, fetchPatients } = usePatientStore();
+  const { patients, consultations, fetchPatients } = usePatientStore();
   const { savePrescription } = usePrescriptionStore();
 
-  const [prescriptions, setPrescriptions] = useState<any[]>([]);
-  const [registrations, setRegistrations] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("patients");
@@ -64,26 +64,27 @@ export default function PatientListPage() {
   const fetchData = async () => {
     try {
       await fetchPatients();
-      const rxResponse = await prescriptionService.getAllPrescriptions();
-      if (Array.isArray(rxResponse)) {
-        setPrescriptions(rxResponse);
-      }
-      try {
-        const regs = await patientService.getAllRegistrations();
-        if (Array.isArray(regs)) {
-          setRegistrations(regs);
-        }
-      } catch (err) {
-        console.error("Failed to load registrations:", err);
-      }
     } catch (err) {
-      console.error("Failed to load patients or prescriptions", err);
+      console.error("Failed to load patients", err);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    // Initial fetch
+    if (pathname === '/patients') {
+      fetchData();
+    }
+
+    // Listen to global route change event to refetch when restoring from Next.js cache
+    const handleRouteChange = (e: any) => {
+      if (e.detail === '/patients') {
+        fetchData();
+      }
+    };
+
+    window.addEventListener('app-route-change', handleRouteChange);
+    return () => window.removeEventListener('app-route-change', handleRouteChange);
+  }, [pathname]);
 
   const handlePatientRegistered = (newPatient: PatientData) => {
     fetchData();
@@ -105,11 +106,10 @@ export default function PatientListPage() {
 
   const mappedPatients: PatientData[] = useMemo(() => {
     return patients.map((p: any) => {
-      const matchingReg = registrations.find((r: any) => r.patient?.patientId === p.patientId);
       return {
         id: String(p.patientId),
-        registrationId: matchingReg?.registrationId || undefined,
-        registrationNumber: matchingReg?.registrationNumber || (p.mobileNumber ? `REG-${p.mobileNumber.slice(-6)}` : "REG-N/A"),
+        registrationId: p.registrationId || undefined,
+        registrationNumber: p.registrationNumber || (p.mobileNumber ? `REG-${p.mobileNumber.slice(-6)}` : "REG-N/A"),
         name: p.patientName,
         age: p.age,
         gender: p.gender,
@@ -148,7 +148,7 @@ export default function PatientListPage() {
         medicines: [],
       };
     });
-  }, [patients, registrations]);
+  }, [patients]);
 
   const followUps = useMemo(() => {
     const today = new Date();
@@ -157,26 +157,24 @@ export default function PatientListPage() {
 
     const list: any[] = [];
 
-    prescriptions.forEach((rx) => {
-      const c = rx.consultation || {};
+    consultations.forEach((c) => {
       if (!c.followUpDate) return;
 
       const followUpDate = new Date(c.followUpDate);
       followUpDate.setHours(0, 0, 0, 0);
       const followUpTime = followUpDate.getTime();
 
-      const patientId = c.patient?.patientId || rx.consultation?.patientId;
+      const patientId = c.patientId;
       const pInfo = mappedPatients.find((p) => p.id === String(patientId));
 
       const patientName = pInfo?.name || c.patientName || "Unknown Patient";
-      const contactNumber = pInfo?.contactNumber || c.patient?.mobileNumber || "N/A";
+      const contactNumber = pInfo?.contactNumber || c.mobileNumber || "N/A";
       const diagnosis = c.diagnosisName || "Diagnosis Pending";
 
-      const subsequentVisits = prescriptions.filter((otherRx) => {
-        const otherId = otherRx.consultation?.patient?.patientId || otherRx.consultation?.patientId;
-        if (String(otherId) !== String(patientId)) return false;
+      const subsequentVisits = consultations.filter((otherC) => {
+        if (String(otherC.patientId) !== String(patientId)) return false;
 
-        const otherVisitDate = new Date(otherRx.createdAt);
+        const otherVisitDate = new Date(otherC.createdAt);
         return otherVisitDate.getTime() > new Date(c.followUpDate).getTime();
       });
 
@@ -190,7 +188,7 @@ export default function PatientListPage() {
       }
 
       list.push({
-        id: rx.prescriptionId,
+        id: c.consultationId,
         patientId,
         patientName,
         contactNumber,
@@ -208,7 +206,7 @@ export default function PatientListPage() {
     });
 
     return list.sort((a, b) => new Date(a.followUpDate).getTime() - new Date(b.followUpDate).getTime());
-  }, [prescriptions, mappedPatients]);
+  }, [consultations, mappedPatients]);
 
   const followUpStats = useMemo(() => {
     const todayCount = followUps.filter((f) => f.status === "today").length;
@@ -245,18 +243,15 @@ export default function PatientListPage() {
           </div>
 
           <nav className="flex items-center gap-4">
-            <a href="/doctor" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Dashboard
-            </a>
-            <a href="/patients" className="text-sm font-medium text-primary">
+            <Link href="/patients" className="text-sm font-medium text-primary">
               Patients
-            </a>
-            <a href="/medicine-master" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link href="/medicine-master" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Medicine Master
-            </a>
-            <a href="/doctor/profile" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link href="/doctor/profile" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Profile
-            </a>
+            </Link>
             <button
               onClick={() => logout()}
               className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"

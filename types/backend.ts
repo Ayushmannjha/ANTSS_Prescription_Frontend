@@ -9,6 +9,8 @@ export interface BackendPatient {
   state?: string;
   city?: string;
   pincode?: string;
+  registrationId?: number;
+  registrationNumber?: string;
 }
 
 export interface BackendPatientRegistration {

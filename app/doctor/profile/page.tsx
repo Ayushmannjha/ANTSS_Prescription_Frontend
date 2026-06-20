@@ -109,6 +109,15 @@ export default function DoctorProfilePage() {
     if (user) {
       fetchProfile();
     }
+
+    const handleRouteChange = (e: any) => {
+      if (e.detail === '/doctor/profile') {
+        if (user) fetchProfile();
+      }
+    };
+
+    window.addEventListener('app-route-change', handleRouteChange);
+    return () => window.removeEventListener('app-route-change', handleRouteChange);
   }, [user]);
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -174,14 +183,8 @@ export default function DoctorProfilePage() {
             </div>
           </div>
           <nav className="flex items-center gap-4">
-            <Link href="/doctor" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              Dashboard
-            </Link>
             <Link href="/patients" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               Patients
-            </Link>
-            <Link href="/appointments" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              Appointments
             </Link>
             <Link href="/medicine-master" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               Medicine Master

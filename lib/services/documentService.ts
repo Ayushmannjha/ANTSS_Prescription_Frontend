@@ -1,4 +1,4 @@
-import { apiRequest } from '../api';
+import { apiClient } from '../../src/services/axios';
 
 export interface UploadedDocument {
   id: number;
@@ -19,12 +19,7 @@ export async function uploadPatientDocument(
   formData.append("file", file);
   formData.append("type", type);
 
-  return await apiRequest(`/api/patients/${patientId}/documents`, {
-    method: "POST",
-    body: formData,
-    // apiRequest skips Content-Type when body is FormData,
-    // letting the browser set the correct multipart boundary
-  });
+  return await apiClient.post(`/api/patients/${patientId}/documents`, formData);
 }
 
 /**
@@ -32,9 +27,7 @@ export async function uploadPatientDocument(
  * GET /api/patients/{patientId}/documents
  */
 export async function getPatientDocuments(patientId: number): Promise<UploadedDocument[]> {
-  return await apiRequest(`/api/patients/${patientId}/documents`, {
-    method: "GET",
-  });
+  return await apiClient.get(`/api/patients/${patientId}/documents`);
 }
 
 /**
@@ -45,7 +38,5 @@ export async function deletePatientDocument(
   patientId: number,
   documentId: number
 ): Promise<void> {
-  await apiRequest(`/api/patients/${patientId}/documents/${documentId}`, {
-    method: "DELETE",
-  });
+  await apiClient.delete(`/api/patients/${patientId}/documents/${documentId}`);
 }
