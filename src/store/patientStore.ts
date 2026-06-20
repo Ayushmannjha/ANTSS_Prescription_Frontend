@@ -4,8 +4,11 @@ import { doctorService } from "../services/doctor.service";
 import { consultationService } from "../services/consultation.service";
 import { BackendPatient } from "../../types/backend";
 
+import { useAuthStore } from "./authStore";
+
 interface PatientState {
   patients: BackendPatient[];
+  consultations: any[];
   loading: boolean;
   error: string | null;
   activePatient: BackendPatient | null;
@@ -16,6 +19,7 @@ interface PatientState {
 
 export const usePatientStore = create<PatientState>((set) => ({
   patients: [],
+  consultations: [],
   loading: false,
   error: null,
   activePatient: null,
@@ -23,9 +27,13 @@ export const usePatientStore = create<PatientState>((set) => ({
   fetchPatients: async () => {
     set({ loading: true, error: null });
     try {
-      // 1. Fetch doctor profile to get doctorId
-      const profileResponse = await doctorService.getDoctorProfile();
-      const doctorId = profileResponse?.data?.id || profileResponse?.id;
+      // 1. Get doctorId from AuthStore first, fallback to fetch if necessary
+      let doctorId = useAuthStore.getState().user?.doctorId;
+      
+      if (!doctorId) {
+        const profileResponse = await doctorService.getDoctorProfile();
+        doctorId = profileResponse?.data?.id || profileResponse?.id;
+      }
 
       if (!doctorId) {
         throw new Error("Could not extract doctor ID from profile");
@@ -48,13 +56,15 @@ export const usePatientStore = create<PatientState>((set) => ({
               gender: cons.gender,
               age: cons.age,
               address: cons.patientAddress,
+              registrationId: cons.registrationId,
+              registrationNumber: cons.registrationNumber,
             });
           }
         });
       }
 
       const data = Array.from(uniquePatientsMap.values());
-      set({ patients: data, loading: false });
+      set({ patients: data, consultations, loading: false });
     } catch (err: any) {
       set({ error: err.message || "Failed to fetch patients", loading: false });
     }

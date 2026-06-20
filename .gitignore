@@ -14,3 +14,9 @@ next.user-config.*
 node_modules
 .next/
 .DS_Store
+# Testing
+tests/
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/

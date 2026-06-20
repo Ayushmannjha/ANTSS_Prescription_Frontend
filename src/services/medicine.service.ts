@@ -54,10 +54,10 @@ const getLoggedInUserId = () => {
   return userId;
 };
 
-const withUserId = (params?: Record<string, any>) => ({
+const withUserId = (params?: Record<string, any>, explicitUserId?: string) => ({
   params: {
     ...(params || {}),
-    userId: getLoggedInUserId(),
+    userId: explicitUserId || getLoggedInUserId(),
   },
 });
 
@@ -68,35 +68,35 @@ export const getMedicineActive = (medicine: MedicineMaster) =>
   medicine.activeStatus ?? medicine.active ?? true;
 
 export const medicineService = {
-  createMedicine: (medicine: MedicineMasterPayload): Promise<MedicineMaster> => {
+  createMedicine: (medicine: MedicineMasterPayload, doctorUserId?: string): Promise<MedicineMaster> => {
     return apiClient
-      .post<any>("/api/medicines", medicine, withUserId())
+      .post<any>("/api/medicines", medicine, withUserId(undefined, doctorUserId))
       .then(normalizeMedicine);
   },
 
-  saveMedicine: (medicine: MedicineMasterPayload): Promise<MedicineMaster> => {
+  saveMedicine: (medicine: MedicineMasterPayload, doctorUserId?: string): Promise<MedicineMaster> => {
     return apiClient
-      .post<any>("/api/medicines", medicine, withUserId())
+      .post<any>("/api/medicines", medicine, withUserId(undefined, doctorUserId))
       .then(normalizeMedicine);
   },
 
-  getMedicines: async (): Promise<MedicineMaster[]> => {
-    const response = await apiClient.get<any>("/api/medicines", withUserId());
+  getMedicines: async (doctorUserId?: string): Promise<MedicineMaster[]> => {
+    const response = await apiClient.get<any>("/api/medicines", withUserId(undefined, doctorUserId));
     return normalizeList(response);
   },
 
-  getMedicineById: (id: number | string): Promise<MedicineMaster> => {
+  getMedicineById: (id: number | string, doctorUserId?: string): Promise<MedicineMaster> => {
     return apiClient
-      .get<any>(`/api/medicines/${id}`, withUserId())
+      .get<any>(`/api/medicines/${id}`, withUserId(undefined, doctorUserId))
       .then(normalizeMedicine);
   },
 
-  searchMedicines: async (keyword: string): Promise<MedicineMaster[]> => {
-    const response = await apiClient.get<any>("/api/medicines/search", withUserId({ keyword }));
+  searchMedicines: async (keyword: string, doctorUserId?: string): Promise<MedicineMaster[]> => {
+    const response = await apiClient.get<any>("/api/medicines/search", withUserId({ keyword }, doctorUserId));
     return normalizeList(response);
   },
 
-  deleteMedicine: (id: number | string): Promise<void> => {
-    return apiClient.delete<void>(`/api/medicines/${id}`, withUserId());
+  deleteMedicine: (id: number | string, doctorUserId?: string): Promise<void> => {
+    return apiClient.delete<void>(`/api/medicines/${id}`, withUserId(undefined, doctorUserId));
   },
 };

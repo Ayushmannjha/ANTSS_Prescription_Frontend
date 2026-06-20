@@ -88,6 +88,15 @@ export default function MedicineMasterPage() {
 
   useEffect(() => {
     loadMedicines();
+
+    const handleRouteChange = (e: any) => {
+      if (e.detail === '/medicine-master') {
+        loadMedicines();
+      }
+    };
+
+    window.addEventListener('app-route-change', handleRouteChange);
+    return () => window.removeEventListener('app-route-change', handleRouteChange);
   }, []);
 
   const openCreateDialog = () => {
@@ -166,9 +175,9 @@ export default function MedicineMasterPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm" className="gap-1">
-              <Link href="/doctor">
+              <Link href="/patients">
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Dashboard
+                Patients
               </Link>
             </Button>
             <Button size="sm" className="gap-1" onClick={openCreateDialog}>

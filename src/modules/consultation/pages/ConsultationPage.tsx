@@ -378,6 +378,8 @@ export default function ConsultationPage() {
         investigations: patientData.investigations.map((inv) => ({
           investigationName: inv.investigationName || "",
           notes: inv.notes || "",
+          documentUrl: inv.documentUrl || null,
+          documentFileName: inv.documentFileName || null,
         })),
 
         // Test Requested - array of objects
@@ -387,10 +389,18 @@ export default function ConsultationPage() {
         })),
 
         // Documents - array of objects
-        documents: patientData.documents.map((doc) => ({
-          fileName: doc.fileName || "",
-          url: doc.url || "",
-        })),
+        documents: [
+          ...patientData.documents.map((doc) => ({
+            fileName: doc.fileName || "",
+            url: doc.url || "",
+          })),
+          ...patientData.investigations
+            .filter((inv) => inv.documentUrl)
+            .map((inv) => ({
+              fileName: inv.documentFileName || "investigation_doc",
+              url: inv.documentUrl || "",
+            }))
+        ],
 
         advice: patientData.advice || null,
         notes: patientData.quickNotes || null,

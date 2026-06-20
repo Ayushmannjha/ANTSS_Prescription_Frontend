@@ -318,6 +318,18 @@ export function PatientForm({
     )
   }
 
+  const updateInvestigationMultiple = (
+    id: string,
+    updates: Partial<Omit<InvestigationEntry, "id">>
+  ) => {
+    updateField(
+      "investigations",
+      data.investigations.map((inv) =>
+        inv.id === id ? { ...inv, ...updates } : inv
+      )
+    )
+  }
+
   const removeInvestigation = (id: string) => {
     updateField(
       "investigations",
@@ -537,6 +549,7 @@ export function PatientForm({
               data={data}
               addInvestigation={addInvestigation}
               updateInvestigation={updateInvestigation}
+              updateInvestigationMultiple={updateInvestigationMultiple}
               removeInvestigation={removeInvestigation}
               isHighlighted={isHighlighted}
               wrapWithMic={wrapWithMic}

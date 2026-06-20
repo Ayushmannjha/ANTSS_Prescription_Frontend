@@ -34,6 +34,11 @@ type Props = {
     value: string
   ) => void;
 
+  updateInvestigationMultiple?: (
+    id: string,
+    updates: Partial<Omit<InvestigationEntry, "id">>
+  ) => void;
+
   isHighlighted?: (field: string) => boolean;
 
   wrapWithMic?: (
@@ -47,6 +52,7 @@ export default function InvestigationsPage({
   addInvestigation,
   removeInvestigation,
   updateInvestigation,
+  updateInvestigationMultiple,
   isHighlighted = () => false,
   wrapWithMic = (_, el) => el,
 }: Props) {
@@ -63,8 +69,16 @@ export default function InvestigationsPage({
     setUploadingId(invId);
     try {
       const result = await uploadPatientDocument(patientId, file, "INVESTIGATION");
-      updateInvestigation(invId, "documentUrl", result.url);
-      updateInvestigation(invId, "documentFileName", result.fileName);
+      if (updateInvestigationMultiple) {
+        updateInvestigationMultiple(invId, {
+          documentUrl: result.url,
+          documentFileName: result.fileName,
+        });
+      } else {
+        // Fallback (though it shouldn't happen)
+        updateInvestigation(invId, "documentUrl", result.url);
+        updateInvestigation(invId, "documentFileName", result.fileName);
+      }
     } catch (err: any) {
       console.error("Upload failed:", err);
       alert(err.message || "Failed to upload document");
