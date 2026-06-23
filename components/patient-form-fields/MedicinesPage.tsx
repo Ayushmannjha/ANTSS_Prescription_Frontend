@@ -61,16 +61,16 @@ export default function MedicinesPage({
   wrapWithMic,
 }: Props) {
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="pb-1.5 px-3 pt-2.5">
+    <Card className="border-slate-200 shadow-sm rounded-xl bg-white overflow-hidden">
+      <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-1.5 text-sm font-semibold">
-            <Pill className="h-3.5 w-3.5 text-accent" />
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <Pill className="h-4 w-4 text-slate-500" />
             Prescribed medicines
           </CardTitle>
 
           <div className="flex items-center gap-1.5">
-            <Button asChild type="button" size="sm" variant="ghost" className="h-6 gap-1 text-[10px]">
+            <Button asChild type="button" size="sm" variant="ghost" className="h-7 gap-1 text-[10px] text-slate-500 hover:text-slate-800">
               <Link href="/medicine-master">
                 <Database className="h-3 w-3" />
                 Medicine Master
@@ -81,7 +81,7 @@ export default function MedicinesPage({
               size="sm"
               variant="outline"
               onClick={addMedicine}
-              className="h-6 gap-1 text-[10px]"
+              className="h-7 px-3 text-xs bg-white hover:bg-slate-50 text-slate-600 border-slate-200 gap-1"
             >
               <Plus className="h-3 w-3" />
               Add medicine
@@ -90,7 +90,7 @@ export default function MedicinesPage({
         </div>
       </CardHeader>
 
-      <CardContent className="px-3 pb-2.5">
+      <CardContent className="p-4">
         {(data.medicines?.length ?? 0) === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-md border bg-card/30 py-3 text-center text-muted-foreground">
             <Pill className="mb-1.5 h-6 w-6 opacity-50" />
@@ -104,7 +104,7 @@ export default function MedicinesPage({
             <div className="min-w-[1100px]">
 
               {/* Header */}
-              <div className="grid grid-cols-[40px_1.2fr_0.7fr_0.7fr_0.8fr_0.8fr_0.8fr_0.7fr_36px] items-center gap-1.5 rounded-md bg-muted/30 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+              <div className="grid grid-cols-[40px_1.2fr_0.7fr_0.7fr_0.8fr_0.8fr_0.8fr_0.7fr_36px] items-center gap-2 rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                 <div>#</div>
                 <div>Medicine</div>
                 <div>Strength</div>
@@ -117,13 +117,13 @@ export default function MedicinesPage({
               </div>
 
               {/* Rows */}
-              <div className="space-y-1.5 pt-1.5">
+              <div className="space-y-2 pt-1">
                 {(data.medicines || []).map((m, index) => (
                   <div
                     key={m.id}
-                    className="grid grid-cols-[40px_1.2fr_0.7fr_0.7fr_0.8fr_0.8fr_0.8fr_0.7fr_36px] items-start gap-1.5 rounded-md border bg-card px-2 py-1.5"
+                    className="grid grid-cols-[40px_1.2fr_0.7fr_0.7fr_0.8fr_0.8fr_0.8fr_0.7fr_36px] items-start gap-2 px-2"
                   >
-                    <div className="pt-1.5 text-center text-[11px] text-muted-foreground">
+                    <div className="pt-2 text-center text-[11px] font-medium text-slate-400">
                       {index + 1}
                     </div>
 
@@ -140,9 +140,9 @@ export default function MedicinesPage({
                           }
                         }}
                         placeholder="Medicine name"
-                        className={`${
+                        className={`bg-slate-50 border-slate-200 focus-visible:ring-sky-500 rounded-md ${
                           isHighlighted("medicines")
-                            ? "ring-2 ring-accent bg-accent/10 animate-pulse"
+                            ? "ring-2 ring-sky-500 bg-sky-50 animate-pulse"
                             : ""
                         }`}
                       />
@@ -156,7 +156,7 @@ export default function MedicinesPage({
                           updateMedicine(m.id, "strength", e.target.value)
                         }
                         placeholder="e.g., 500mg"
-                        className="h-8 text-sm"
+                        className="h-8 text-xs bg-slate-50 border-slate-200 focus-visible:ring-sky-500"
                       />
                     )}
 
@@ -168,7 +168,7 @@ export default function MedicinesPage({
                           updateMedicine(m.id, "dosage", e.target.value)
                         }
                         placeholder="e.g., 1 tab"
-                        className="h-8 text-sm"
+                        className="h-8 text-xs bg-slate-50 border-slate-200 focus-visible:ring-sky-500"
                       />
                     )}
 
@@ -180,7 +180,7 @@ export default function MedicinesPage({
                           updateMedicine(m.id, "frequency", e.target.value)
                         }
                         placeholder="e.g., BD"
-                        className="h-8 text-sm"
+                        className="h-8 text-xs bg-slate-50 border-slate-200 focus-visible:ring-sky-500"
                       />
                     )}
 
@@ -192,7 +192,7 @@ export default function MedicinesPage({
                           updateMedicine(m.id, "duration", e.target.value)
                         }
                         placeholder="e.g., 5 days"
-                        className="h-8 text-sm"
+                        className="h-8 text-xs bg-slate-50 border-slate-200 focus-visible:ring-sky-500"
                       />
                     )}
 
@@ -204,7 +204,7 @@ export default function MedicinesPage({
                           updateMedicine(m.id, "instruction", e.target.value)
                         }
                         placeholder="e.g., after food"
-                        className="h-8 text-sm"
+                        className="h-8 text-xs bg-slate-50 border-slate-200 focus-visible:ring-sky-500"
                       />
                     )}
 
@@ -216,7 +216,7 @@ export default function MedicinesPage({
                           updateMedicine(m.id, "quantity", e.target.value)
                         }
                         placeholder="e.g., 10"
-                        className="h-8 text-sm"
+                        className="h-8 text-xs bg-slate-50 border-slate-200 focus-visible:ring-sky-500"
                       />
                     )}
 
@@ -225,7 +225,7 @@ export default function MedicinesPage({
                         type="button"
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                         onClick={() => removeMedicine(m.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

@@ -42,11 +42,11 @@ export default function MedicalHistoryPage({
   wrapWithMic = (_, el) => el,
 }: Props) {
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="pb-1.5 px-3 pt-2.5">
+    <Card className="border-slate-200 shadow-sm rounded-xl bg-white overflow-hidden">
+      <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-1.5 text-sm font-semibold">
-            <FileText className="h-3.5 w-3.5 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <FileText className="h-4 w-4 text-slate-500" />
             Past Medical History
           </CardTitle>
 
@@ -54,7 +54,7 @@ export default function MedicalHistoryPage({
             type="button"
             size="sm"
             variant="outline"
-            className="h-6 px-2 text-[10px]"
+            className="h-7 px-3 text-xs bg-white hover:bg-slate-50 text-slate-600 border-slate-200"
             onClick={addPastMedicalHistory}
           >
             <Plus className="h-3 w-3 mr-1" />
@@ -63,7 +63,7 @@ export default function MedicalHistoryPage({
         </div>
       </CardHeader>
 
-      <CardContent className="px-3 pb-2.5">
+      <CardContent className="p-4">
         {(data.pastMedicalHistories?.length ?? 0) === 0 ? (
           <div className="rounded-md border bg-card/30 py-2 px-2 text-center text-xs text-muted-foreground">
             No past medical history yet. Click "Add" to add one.
@@ -73,18 +73,18 @@ export default function MedicalHistoryPage({
             {(data.pastMedicalHistories || []).map((pmh, index) => (
               <div
                 key={pmh.id}
-                className="rounded-md border bg-card p-3 relative"
+                className="rounded-xl border border-slate-100 bg-slate-50/30 p-3 relative"
               >
                 {/* Header with index and delete button */}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-medium text-muted-foreground">
+                <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                     Entry #{index + 1}
                   </span>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                     onClick={() => removePastMedicalHistory(pmh.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -94,8 +94,8 @@ export default function MedicalHistoryPage({
                 <div className="grid gap-3 md:grid-cols-3">
                   {/* Allergies */}
                   <div className="grid gap-1">
-                    <label className="text-[10px] flex items-center gap-1 font-medium">
-                      <AlertCircle className="h-3 w-3 text-red-500" />
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                      <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
                       Allergies
                     </label>
                     {wrapWithMic(
@@ -107,15 +107,15 @@ export default function MedicalHistoryPage({
                           updatePastMedicalHistory(pmh.id, "allergies", e.target.value)
                         }
                         placeholder="List allergies..."
-                        className={`text-xs resize-none ${inputClass("allergies")}`}
+                        className={`text-xs resize-none bg-white border-slate-200 focus-visible:ring-sky-500 rounded-lg ${inputClass("allergies")}`}
                       />
                     )}
                   </div>
 
                   {/* Current Medications */}
                   <div className="grid gap-1">
-                    <label className="text-[10px] flex items-center gap-1 font-medium">
-                      <Pill className="h-3 w-3 text-blue-500" />
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                      <Pill className="h-3.5 w-3.5 text-sky-500" />
                       Current Medications
                     </label>
                     {wrapWithMic(
@@ -127,15 +127,15 @@ export default function MedicalHistoryPage({
                           updatePastMedicalHistory(pmh.id, "currentMedicine", e.target.value)
                         }
                         placeholder="List current medications..."
-                        className={`text-xs resize-none ${inputClass("currentMedicine")}`}
+                        className={`text-xs resize-none bg-white border-slate-200 focus-visible:ring-sky-500 rounded-lg ${inputClass("currentMedicine")}`}
                       />
                     )}
                   </div>
 
                   {/* Medical History */}
                   <div className="grid gap-1">
-                    <label className="text-[10px] flex items-center gap-1 font-medium">
-                      <FileText className="h-3 w-3 text-green-500" />
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                      <FileText className="h-3.5 w-3.5 text-emerald-500" />
                       Medical History
                     </label>
                     {wrapWithMic(
@@ -147,7 +147,7 @@ export default function MedicalHistoryPage({
                           updatePastMedicalHistory(pmh.id, "medicalHistory", e.target.value)
                         }
                         placeholder="Past surgeries, chronic conditions..."
-                        className={`text-xs resize-none ${inputClass("medicalHistory")}`}
+                        className={`text-xs resize-none bg-white border-slate-200 focus-visible:ring-sky-500 rounded-lg ${inputClass("medicalHistory")}`}
                       />
                     )}
                   </div>

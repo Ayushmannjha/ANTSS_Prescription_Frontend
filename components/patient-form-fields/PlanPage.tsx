@@ -47,19 +47,19 @@ export default function PlanPage({
   const today = localTodayStr();
 
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="pb-1.5 px-3 pt-2.5">
-        <CardTitle className="flex items-center gap-1.5 text-sm font-semibold">
-          <Activity className="h-3.5 w-3.5 text-primary" />
+    <Card className="border-slate-200 shadow-sm rounded-xl bg-white overflow-hidden">
+      <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <Activity className="h-4 w-4 text-slate-500" />
           Plan
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="grid gap-3 px-3 pb-2.5">
+      <CardContent className="grid gap-3 p-4">
 
         {/* Advice */}
         <div className="grid gap-1">
-          <Label className="text-[10px] font-medium text-muted-foreground">
+          <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
             Advice &amp; Instructions
           </Label>
           {wrapWithMic(
@@ -71,7 +71,7 @@ export default function PlanPage({
                 updateField("advice", e.target.value || null)
               }
               placeholder="e.g., Rest well, avoid cold food, drink plenty of fluids…"
-              className={`text-xs resize-none ${inputClass("advice")}`}
+              className={`text-sm bg-slate-50 border-slate-200 focus-visible:ring-sky-500 resize-none ${inputClass("advice")}`}
             />
           )}
         </div>
@@ -81,7 +81,7 @@ export default function PlanPage({
 
           {/* Next Visit Date */}
           <div className="grid gap-1">
-            <Label className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+            <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1">
               <Calendar className="h-3 w-3" />
               Next Visit Date
             </Label>
@@ -94,7 +94,7 @@ export default function PlanPage({
                 onChange={(e) =>
                   updateField("nextVisit", e.target.value || null)
                 }
-                className={`h-8 text-sm ${inputClass("nextVisit")}`}
+                className={`h-8 text-sm bg-slate-50 border-slate-200 focus-visible:ring-sky-500 [&::-webkit-calendar-picker-indicator]:mr-6 ${inputClass("nextVisit")}`}
               />
             )}
             <p className="text-[10px] text-muted-foreground">
@@ -104,7 +104,7 @@ export default function PlanPage({
 
           {/* Follow-up Date */}
           <div className="grid gap-1">
-            <Label className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+            <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1">
               <Calendar className="h-3 w-3 text-primary" />
               Follow-up Date
               <span className="ml-1 text-[9px] text-muted-foreground/70">(must be today or later)</span>
@@ -118,7 +118,7 @@ export default function PlanPage({
                 onChange={(e) =>
                   updateField("followUp", e.target.value || null)
                 }
-                className={`h-8 text-sm ${inputClass("followUp")}`}
+                className={`h-8 text-sm bg-slate-50 border-slate-200 focus-visible:ring-sky-500 [&::-webkit-calendar-picker-indicator]:mr-6 ${inputClass("followUp")}`}
               />
             )}
             <p className="text-[10px] text-muted-foreground">
