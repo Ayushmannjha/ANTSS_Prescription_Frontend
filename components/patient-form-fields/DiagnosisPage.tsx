@@ -41,11 +41,11 @@ export default function DiagnosisPage({
   wrapWithMic = (_, el) => el,
 }: Props) {
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="pb-1.5 px-3 pt-2.5">
+    <Card className="border-slate-200 shadow-sm rounded-xl bg-white overflow-hidden">
+      <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-1.5 text-sm font-semibold">
-            <ShieldCheck className="h-3.5 w-3.5 text-accent" />
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <ShieldCheck className="h-4 w-4 text-slate-500" />
             Diagnosis
           </CardTitle>
 
@@ -53,16 +53,16 @@ export default function DiagnosisPage({
             type="button"
             size="sm"
             variant="outline"
-            className="h-6 gap-1 text-[10px]"
+            className="h-7 px-3 text-xs bg-white hover:bg-slate-50 text-slate-600 border-slate-200"
             onClick={addDiagnosis}
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3 w-3 mr-1" />
             Add
           </Button>
         </div>
       </CardHeader>
 
-      <CardContent className="px-3 pb-2.5">
+      <CardContent className="p-4">
         {(data.diagnoses?.length ?? 0) === 0 ? (
           <div className="rounded-md border bg-card/30 py-2 px-2 text-center text-xs text-muted-foreground">
             No diagnoses yet. Use voice or click "Add".
@@ -72,7 +72,7 @@ export default function DiagnosisPage({
             <div className="min-w-[780px]">
 
               {/* Header */}
-              <div className="grid grid-cols-[52px_1.35fr_1fr_0.7fr_36px] items-center gap-1.5 rounded-md bg-muted/30 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+              <div className="grid grid-cols-[52px_1.35fr_1fr_0.7fr_36px] items-center gap-2 rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                 <div>#</div>
                 <div>Diagnosis</div>
                 <div>Code</div>
@@ -81,13 +81,13 @@ export default function DiagnosisPage({
               </div>
 
               {/* Rows */}
-              <div className="space-y-1.5 pt-1.5">
+              <div className="space-y-2 pt-1">
                 {(data.diagnoses || []).map((d, index) => (
                   <div
                     key={d.id}
-                    className="grid grid-cols-[52px_1.35fr_1fr_0.7fr_36px] items-start gap-1.5 rounded-md border bg-card px-2 py-1.5"
+                    className="grid grid-cols-[52px_1.35fr_1fr_0.7fr_36px] items-start gap-2 px-2"
                   >
-                    <div className="pt-1.5 text-center text-[11px] text-muted-foreground">
+                    <div className="pt-2 text-center text-[11px] font-medium text-slate-400">
                       {index + 1}
                     </div>
 
@@ -132,7 +132,7 @@ export default function DiagnosisPage({
                         type="button"
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                         onClick={() => removeDiagnosis(d.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

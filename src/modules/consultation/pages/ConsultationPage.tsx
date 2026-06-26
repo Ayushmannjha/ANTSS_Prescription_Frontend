@@ -660,7 +660,7 @@ export default function ConsultationPage() {
         hasTodayPrescription={prescriptionHistory.some((p) => p.createdAt?.startsWith(todayYYYYMMDD))}
       />
 
-      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-4 lg:px-6">
+      <main className="mx-auto max-w-none px-3 py-4 sm:px-4 lg:px-6 w-full">
         <FloatingAIAssistant
           state={assistantState as any}
           transcript={transcript}
@@ -673,21 +673,7 @@ export default function ConsultationPage() {
           onStopListening={stopListening}
         />
 
-        <section className="mb-4">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <PatientInfoCard patientData={patientData} prescriptionHistoryLength={prescriptionHistory.length} />
-            </div>
-            <div>
-              <PrescriptionHistoryCard
-                prescriptionHistory={prescriptionHistory}
-                viewingPrescriptionId={viewingPrescriptionId}
-                handleLoadPrescription={handleLoadPrescription}
-                handleReset={handleReset}
-              />
-            </div>
-          </div>
-        </section>
+
 
         <section>
           <div className={isReadOnly ? "pointer-events-none opacity-80" : ""}>
@@ -703,6 +689,15 @@ export default function ConsultationPage() {
                 onMicToggle: handleMicToggleForField,
               }}
               registerFieldRef={registerFieldRef}
+              prescriptionHistoryNode={
+                <PrescriptionHistoryCard
+                  prescriptionHistory={prescriptionHistory}
+                  viewingPrescriptionId={viewingPrescriptionId}
+                  handleLoadPrescription={handleLoadPrescription}
+                  handleReset={handleReset}
+                />
+              }
+              prescriptionHistoryLength={prescriptionHistory.length}
             />
           </div>
         </section>

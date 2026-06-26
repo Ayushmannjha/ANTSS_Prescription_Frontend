@@ -17,27 +17,27 @@ export function PrescriptionHistoryCard({
   handleReset,
 }: PrescriptionHistoryCardProps) {
   return (
-    <Card className="border-primary/20 h-full flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center justify-between">
+    <Card className="border-slate-200 shadow-sm rounded-xl bg-white flex flex-col overflow-hidden">
+      <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
+        <CardTitle className="text-sm font-semibold text-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
+            <Clock className="h-4 w-4 text-slate-500" />
             Prescription History
           </div>
           {viewingPrescriptionId && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary/80"
+              className="h-7 px-3 text-xs bg-white hover:bg-slate-50 text-slate-600 border-slate-200"
               onClick={handleReset}
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3 w-3 mr-1" />
               New
             </Button>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto max-h-[200px] lg:max-h-[300px]">
+      <CardContent className="flex-1 overflow-y-auto max-h-[300px] p-4">
         {prescriptionHistory.length === 0 ? (
           <div className="text-center py-6 text-sm text-muted-foreground">No prescription history found.</div>
         ) : (
@@ -46,7 +46,7 @@ export function PrescriptionHistoryCard({
               <div
                 key={item.prescriptionId}
                 className={`p-3 rounded-lg border text-sm transition-colors flex flex-col justify-between gap-2 ${
-                  viewingPrescriptionId === item.prescriptionId ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                  viewingPrescriptionId === item.prescriptionId ? "border-sky-500 bg-sky-50/50" : "border-slate-100 hover:bg-slate-50"
                 }`}
               >
                 <div className="flex justify-between items-start">
@@ -68,7 +68,7 @@ export function PrescriptionHistoryCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-primary hover:text-primary/80"
+                      className="h-7 w-7 text-slate-400 hover:text-sky-600 hover:bg-sky-50"
                       onClick={() => handleLoadPrescription(item)}
                       title="View Prescription"
                     >

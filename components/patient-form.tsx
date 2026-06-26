@@ -57,6 +57,8 @@ interface PatientFormProps {
   highlightedFields?: string[]
   mic?: PatientMicControls
   registerFieldRef?: (fieldName: string, element: HTMLElement | null) => void
+  prescriptionHistoryNode?: React.ReactNode
+  prescriptionHistoryLength?: number
 }
 
 /* ================= COMPONENT ================= */
@@ -67,6 +69,8 @@ export function PatientForm({
   highlightedFields = [],
   mic,
   registerFieldRef,
+  prescriptionHistoryNode,
+  prescriptionHistoryLength = 0,
 }: PatientFormProps) {
 
   /* ---------- helpers ---------- */
@@ -456,23 +460,25 @@ export function PatientForm({
 
   return (
     <div className="w-full">
-      <div className="rounded-lg border bg-card p-1.5 shadow-sm">
+      <div className="flex justify-end px-2 pb-3 print:hidden">
+        <button
+          type="button"
+          onClick={handlePrintPrescription}
+          className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors shadow-sm text-sm font-medium"
+          title="Print Prescription"
+        >
+          <Printer className="w-4 h-4" />
+          Print Prescription
+        </button>
+      </div>
 
-        <div className="space-y-2">
-
-          {/* Print Prescription Button */}
-          <div className="flex justify-end px-2 pt-2 print:hidden">
-            <button
-              type="button"
-              onClick={handlePrintPrescription}
-              className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors shadow-sm text-sm font-medium"
-              title="Print Prescription"
-            >
-              <Printer className="w-4 h-4" />
-              Print Prescription
-            </button>
-          </div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-none">
+        
+        {/* ==================================================== */}
+        {/* LEFT COLUMN (lg:col-span-5)                         */}
+        {/* ==================================================== */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          
           {/* Patient Info */}
           <PatientPage
             data={data}
@@ -480,114 +486,137 @@ export function PatientForm({
             inputClass={inputClass}
             mic={mic}
             registerFieldRef={registerFieldRef}
+            prescriptionHistoryLength={prescriptionHistoryLength}
           />
 
-          {/* Main - SOAP Clinical Flow */}
-          <div className="space-y-2">
+          {/* Vitals Section */}
+          <VitalsPage
+            data={data}
+            updateField={updateField}
+            inputClass={inputClass}
+            sectionPulseClass={sectionPulseClass}
+            wrapWithMic={wrapWithMic as ( field: keyof PatientData, node: React.ReactElement ) => React.ReactElement}
+            registerFieldRef={registerFieldRef}
+          />
 
-            {/* Past Medical History (after Patient Info, before Vitals) */}
-            <MedicalHistoryPage
-              data={data}
-              addPastMedicalHistory={addPastMedicalHistory}
-              updatePastMedicalHistory={updatePastMedicalHistory}
-              removePastMedicalHistory={removePastMedicalHistory}
-              inputClass={inputClass}
-              wrapWithMic={wrapWithMic}
-            />
+          {/* Past Medical History (after Patient Info, before Complaints) */}
+          <MedicalHistoryPage
+            data={data}
+            addPastMedicalHistory={addPastMedicalHistory}
+            updatePastMedicalHistory={updatePastMedicalHistory}
+            removePastMedicalHistory={removePastMedicalHistory}
+            inputClass={inputClass}
+            wrapWithMic={wrapWithMic}
+          />
 
-            {/* Vitals Section */}
-            <VitalsPage
-              data={data}
-              updateField={updateField}
-              inputClass={inputClass}
-              sectionPulseClass={sectionPulseClass}
-              wrapWithMic={wrapWithMic as ( field: keyof PatientData, node: React.ReactElement ) => React.ReactElement}
-              registerFieldRef={registerFieldRef}
-            />
+          {/* Chief Complaints (Subjective) */}
+          <ComplaintsPage
+            data={data}
+            addComplaint={addComplaint}
+            updateComplaint={updateComplaint}
+            removeComplaint={removeComplaint}
+            wrapWithMic={wrapWithMic}
+            isHighlighted={isHighlighted}
+          />
 
-            {/* Chief Complaints (Subjective) */}
-            <ComplaintsPage
-              data={data}
-              addComplaint={addComplaint}
-              updateComplaint={updateComplaint}
-              removeComplaint={removeComplaint}
-              wrapWithMic={wrapWithMic}
-              isHighlighted={isHighlighted}
-            />
+          {/* General Examination (Objective) */}
+          <GeneralExaminationPage
+            data={data}
+            addGeneralExamination={addGeneralExamination}
+            updateGeneralExamination={updateGeneralExamination}
+            removeGeneralExamination={removeGeneralExamination}
+            inputClass={inputClass}
+            wrapWithMic={wrapWithMic}
+            registerFieldRef={registerFieldRef}
+          />
 
-            {/* General Examination (Objective) */}
-            <GeneralExaminationPage
-              data={data}
-              addGeneralExamination={addGeneralExamination}
-              updateGeneralExamination={updateGeneralExamination}
-              removeGeneralExamination={removeGeneralExamination}
-              inputClass={inputClass}
-              wrapWithMic={wrapWithMic}
-              registerFieldRef={registerFieldRef}
-            />
+          {/* Diagnosis Section */}
+          <DiagnosisPage
+            data={data}
+            addDiagnosis={addDiagnosis}
+            removeDiagnosis={removeDiagnosis}
+            updateDiagnosis={updateDiagnosis}
+            isHighlighted={isHighlighted}
+            wrapWithMic={wrapWithMic}
+          />
 
-            {/* Diagnosis Section */}
-            <DiagnosisPage
-              data={data}
-              addDiagnosis={addDiagnosis}
-              removeDiagnosis={removeDiagnosis}
-              updateDiagnosis={updateDiagnosis}
-              isHighlighted={isHighlighted}
-              wrapWithMic={wrapWithMic}
-            />
+          {/* Plan Section */}
+          <PlanPage
+            data={data}
+            updateField={updateField}
+            inputClass={inputClass}
+            wrapWithMic={wrapWithMic}
+          />
 
-            {/* Plan Section */}
-            <PlanPage
-              data={data}
-              updateField={updateField}
-              inputClass={inputClass}
-              wrapWithMic={wrapWithMic}
-            />
+        </div>
 
-            {/* Investigations Section */}
-            <InvestigationsPage
-              data={data}
-              addInvestigation={addInvestigation}
-              updateInvestigation={updateInvestigation}
-              updateInvestigationMultiple={updateInvestigationMultiple}
-              removeInvestigation={removeInvestigation}
-              isHighlighted={isHighlighted}
-              wrapWithMic={wrapWithMic}
-            />
+        {/* ==================================================== */}
+        {/* RIGHT COLUMN (lg:col-span-7)                        */}
+        {/* ==================================================== */}
+        <div className="lg:col-span-7 flex flex-col gap-6">
+          
+          {prescriptionHistoryNode}
 
-            {/* Test Requested Section */}
-            <TestRequestedPage
-              data={data}
-              addTestRequested={addTestRequested}
-              updateTestRequested={updateTestRequested}
-              removeTestRequested={removeTestRequested}
-              isHighlighted={isHighlighted}
-              wrapWithMic={wrapWithMic}
-            />
+          {/* Test Requested Section */}
+          <TestRequestedPage
+            data={data}
+            addTestRequested={addTestRequested}
+            updateTestRequested={updateTestRequested}
+            removeTestRequested={removeTestRequested}
+            isHighlighted={isHighlighted}
+            wrapWithMic={wrapWithMic}
+          />
 
-            {/* Documents Section */}
-            <DocumentsPage
-              data={data}
-              addDocument={addDocument}
-              addDocumentWithValues={addDocumentWithValues}
-              updateDocument={updateDocument}
-              removeDocument={removeDocument}
-              isHighlighted={isHighlighted}
-            />
+          {/* Investigations Section */}
+          <InvestigationsPage
+            data={data}
+            addInvestigation={addInvestigation}
+            updateInvestigation={updateInvestigation}
+            updateInvestigationMultiple={updateInvestigationMultiple}
+            removeInvestigation={removeInvestigation}
+            isHighlighted={isHighlighted}
+            wrapWithMic={wrapWithMic}
+          />
 
-            {/* Medicines (Treatment) */}
-            <MedicinesPage
-              data={data}
-              addMedicine={addMedicine}
-              removeMedicine={removeMedicine}
-              updateMedicine={updateMedicine}
-              applyMedicineMaster={applyMedicineMaster}
-              inputClass={inputClass}
-              isHighlighted={isHighlighted}
-              wrapWithMic={wrapWithMic}
-            />
+          {/* Documents Section */}
+          <DocumentsPage
+            data={data}
+            addDocument={addDocument}
+            addDocumentWithValues={addDocumentWithValues}
+            updateDocument={updateDocument}
+            removeDocument={removeDocument}
+            isHighlighted={isHighlighted}
+          />
 
+          {/* Medicines (Treatment) */}
+          <MedicinesPage
+            data={data}
+            addMedicine={addMedicine}
+            removeMedicine={removeMedicine}
+            updateMedicine={updateMedicine}
+            applyMedicineMaster={applyMedicineMaster}
+            inputClass={inputClass}
+            isHighlighted={isHighlighted}
+            wrapWithMic={wrapWithMic}
+          />
+
+          {/* Digital Signature */}
+          <div className="flex justify-end mt-2 mb-8 print:hidden">
+            <div className="border border-slate-200 shadow-sm rounded-xl bg-white w-full max-w-[340px] p-5 flex gap-5">
+              <div className="flex-1 border-2 border-dashed border-slate-200 rounded-lg h-24 flex items-center justify-center bg-slate-50">
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold text-center leading-relaxed">Doctor's<br/>Stamp</span>
+              </div>
+              <div className="flex-[1.2] flex flex-col items-center justify-end border-b-2 border-slate-800 pb-2 relative">
+                <div className="h-16 flex items-end justify-center w-full mb-1">
+                  <span className="font-['Brush_Script_MT',cursive,serif] italic text-3xl text-slate-700 opacity-90 select-none">
+                    Dr. Smith
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-semibold">Signature</span>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>

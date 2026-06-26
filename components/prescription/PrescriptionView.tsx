@@ -176,8 +176,17 @@ export default function PrescriptionView({ prescription: directPrescription, pre
       {/* Main A4 Document Container */}
       <div className="w-[210mm] min-h-[297mm] bg-white text-black font-serif shadow-2xl p-[15mm] flex flex-col justify-between relative print:shadow-none print:w-full print:h-full print:p-0 print:m-0 print:min-h-0 print:overflow-visible">
         
+        {/* Background Image Watermark */}
+        <div className="absolute inset-0 pointer-events-none flex justify-center items-center z-0 overflow-hidden">
+          <img 
+            src="/_DOCTOR-removebg-preview.png" 
+            alt="Watermark" 
+            className="w-[60%] opacity-[0.08] print:opacity-[0.08] object-contain"
+          />
+        </div>
+
         {/* Top & Body Container */}
-        <div>
+        <div className="relative z-10">
           {/* Header Block */}
           <PrescriptionHeader clinic={prescription.clinic} doctor={prescription.doctor} />
 
@@ -217,7 +226,9 @@ export default function PrescriptionView({ prescription: directPrescription, pre
         </div>
 
         {/* Bottom Area (Signature & Footer Stamp) */}
-        <PrescriptionFooter doctor={prescription.doctor} />
+        <div className="relative z-10">
+          <PrescriptionFooter doctor={prescription.doctor} prescriptionId={prescriptionId} />
+        </div>
       </div>
 
       {/* Global CSS style overrides for accurate A4 print layouts */}

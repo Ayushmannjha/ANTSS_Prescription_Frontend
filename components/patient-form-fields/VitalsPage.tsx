@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Scale, Calendar, Info } from "lucide-react";
+import { Heart, Scale, Calendar, Info, Activity } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -70,24 +70,24 @@ export default function VitalsPage({
 
   return (
     <Card
-      className={`border-border/50 shadow-sm ${sectionPulseClass(
+      className={`border-slate-200 shadow-sm rounded-xl bg-white ${sectionPulseClass(
         "bloodPressureSystolic"
       )}`}
     >
-      <CardHeader className="pb-1.5 px-3 pt-2.5">
-        <CardTitle className="flex items-center gap-1.5 text-sm font-semibold">
-          <Heart className="h-3.5 w-3.5 text-destructive" />
-          Vitals
+      <CardHeader className="pb-3 pt-5 px-5 border-b border-slate-50 mb-3">
+        <CardTitle className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+          <Activity className="h-4 w-4 text-slate-500" />
+          Vitals Entry
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="px-3 pb-2.5">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <CardContent className="px-5 pb-5">
+        <div className="grid gap-4 grid-cols-2">
 
           {/* Blood Pressure */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">Blood Pressure (mmHg)</Label>
-            <div className="flex items-center gap-1.5">
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <Label className="text-xs font-medium text-slate-700">Blood Pressure (mmHg)</Label>
+            <div className="flex items-center gap-2">
               {wrapWithMic(
                 "bloodPressureSystolic",
                 <Input
@@ -95,7 +95,7 @@ export default function VitalsPage({
                   type="number"
                   min={60}
                   max={200}
-                  placeholder="Systolic"
+                  placeholder="120"
                   value={data.bloodPressureSystolic ?? ""}
                   onChange={(e) =>
                     updateField(
@@ -103,10 +103,10 @@ export default function VitalsPage({
                       e.target.value ? Number(e.target.value) : null
                     )
                   }
-                  className={`${inputClass("bloodPressureSystolic")}`}
+                  className={`w-full text-sm focus-visible:ring-sky-500 rounded-lg text-center bg-slate-50 ${inputClass("bloodPressureSystolic")}`}
                 />
               )}
-              <span className="text-muted-foreground text-sm font-medium">/</span>
+              <span className="text-slate-400 font-medium">/</span>
               {wrapWithMic(
                 "bloodPressureDiastolic",
                 <Input
@@ -114,7 +114,7 @@ export default function VitalsPage({
                   type="number"
                   min={40}
                   max={130}
-                  placeholder="Diastolic"
+                  placeholder="80"
                   value={data.bloodPressureDiastolic ?? ""}
                   onChange={(e) =>
                     updateField(
@@ -122,186 +122,186 @@ export default function VitalsPage({
                       e.target.value ? Number(e.target.value) : null
                     )
                   }
-                  className={`${inputClass("bloodPressureDiastolic")}`}
+                  className={`w-full text-sm focus-visible:ring-sky-500 rounded-lg text-center bg-slate-50 ${inputClass("bloodPressureDiastolic")}`}
                 />
               )}
             </div>
-            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Info className="h-2.5 w-2.5 flex-shrink-0" />
-              Normal: 90–120 / 60–80 mmHg
-            </p>
+            <p className="text-[11px] text-muted-foreground">Normal: 120/80</p>
           </div>
 
           {/* Pulse */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">Pulse (bpm)</Label>
-            {wrapWithMic(
-              "pulse",
-              <Input
-                ref={(el) => { if (el && registerFieldRef) registerFieldRef("pulse", el); }}
-                type="number"
-                min={30}
-                max={250}
-                placeholder="e.g., 72"
-                value={data.pulse ?? ""}
-                onChange={(e) =>
-                  updateField("pulse", e.target.value ? Number(e.target.value) : null)
-                }
-                className={inputClass("pulse")}
-              />
-            )}
-            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Info className="h-2.5 w-2.5 flex-shrink-0" />
-              Normal: 60–100 bpm
-            </p>
-          </div>
-
-          {/* Height */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">Height (cm)</Label>
-            {wrapWithMic(
-              "height",
-              <Input
-                ref={(el) => { if (el && registerFieldRef) registerFieldRef("height", el); }}
-                type="number"
-                min={30}
-                max={250}
-                placeholder="e.g., 170"
-                value={data.height ?? ""}
-                onChange={(e) =>
-                  updateField("height", e.target.value ? Number(e.target.value) : null)
-                }
-                className={inputClass("height")}
-              />
-            )}
-          </div>
-
-          {/* Weight */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">Weight (kg)</Label>
-            {wrapWithMic(
-              "weight",
-              <Input
-                ref={(el) => { if (el && registerFieldRef) registerFieldRef("weight", el); }}
-                type="number"
-                min={1}
-                max={500}
-                placeholder="e.g., 70"
-                value={data.weight ?? ""}
-                onChange={(e) =>
-                  updateField("weight", e.target.value ? Number(e.target.value) : null)
-                }
-                className={inputClass("weight")}
-              />
-            )}
-          </div>
-
-          {/* BMI - Read Only with category badge */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">BMI</Label>
-            <div className="flex items-center gap-2">
-              <Scale className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-              <Input
-                type="text"
-                readOnly
-                value={bmi !== null ? String(bmi) : "---"}
-                className="bg-muted/50 text-xs"
-              />
-            </div>
-            {bmiCategory && (
-              <span
-                className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold ${bmiCategory.color}`}
-              >
-                {bmiCategory.label}
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <Label className="text-xs font-medium text-slate-700">Pulse</Label>
+            <div className="relative">
+              {wrapWithMic(
+                "pulse",
+                <Input
+                  ref={(el) => { if (el && registerFieldRef) registerFieldRef("pulse", el); }}
+                  type="number"
+                  min={30}
+                  max={250}
+                  placeholder="72"
+                  value={data.pulse ?? ""}
+                  onChange={(e) =>
+                    updateField("pulse", e.target.value ? Number(e.target.value) : null)
+                  }
+                  className={`w-full pr-12 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("pulse")}`}
+                />
+              )}
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
+                bpm
               </span>
-            )}
-          </div>
-
-          {/* Temperature */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">Temperature (°F)</Label>
-            {wrapWithMic(
-              "temperature",
-              <Input
-                ref={(el) => { if (el && registerFieldRef) registerFieldRef("temperature", el); }}
-                type="number"
-                step="0.1"
-                min={90}
-                max={110}
-                placeholder="e.g., 98.6"
-                value={data.temperature ?? ""}
-                onChange={(e) =>
-                  updateField("temperature", e.target.value ? Number(e.target.value) : null)
-                }
-                className={inputClass("temperature")}
-              />
-            )}
-            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Info className="h-2.5 w-2.5 flex-shrink-0" />
-              Normal: 97–99°F
-            </p>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Normal: 60-100</p>
           </div>
 
           {/* SpO2 */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">SpO₂ (%)</Label>
-            {wrapWithMic(
-              "oxygenSaturation",
-              <Input
-                ref={(el) => { if (el && registerFieldRef) registerFieldRef("oxygenSaturation", el); }}
-                type="number"
-                min={50}
-                max={100}
-                placeholder="e.g., 98"
-                value={data.oxygenSaturation ?? ""}
-                onChange={(e) =>
-                  updateField("oxygenSaturation", e.target.value ? Number(e.target.value) : null)
-                }
-                className={inputClass("oxygenSaturation")}
-              />
-            )}
-            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Info className="h-2.5 w-2.5 flex-shrink-0" />
-              Normal: ≥ 95%
-            </p>
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <Label className="text-xs font-medium text-slate-700">SpO2</Label>
+            <div className="relative">
+              {wrapWithMic(
+                "oxygenSaturation",
+                <Input
+                  ref={(el) => { if (el && registerFieldRef) registerFieldRef("oxygenSaturation", el); }}
+                  type="number"
+                  min={50}
+                  max={100}
+                  placeholder="98"
+                  value={data.oxygenSaturation ?? ""}
+                  onChange={(e) =>
+                    updateField("oxygenSaturation", e.target.value ? Number(e.target.value) : null)
+                  }
+                  className={`w-full pr-12 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("oxygenSaturation")}`}
+                />
+              )}
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
+                %
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Normal: 95-100</p>
           </div>
 
+          {/* Temperature */}
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <Label className="text-xs font-medium text-slate-700">Temperature</Label>
+            <div className="relative">
+              {wrapWithMic(
+                "temperature",
+                <Input
+                  ref={(el) => { if (el && registerFieldRef) registerFieldRef("temperature", el); }}
+                  type="number"
+                  step="0.1"
+                  min={90}
+                  max={110}
+                  placeholder="98.6"
+                  value={data.temperature ?? ""}
+                  onChange={(e) =>
+                    updateField("temperature", e.target.value ? Number(e.target.value) : null)
+                  }
+                  className={`w-full pr-12 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("temperature")}`}
+                />
+              )}
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
+                °F
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Normal: 97-99</p>
+          </div>
+
+          {/* BMI Display */}
+          <div className="col-span-2 mt-2 p-3 bg-slate-50/80 rounded-lg border border-slate-100 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex gap-6">
+              <div>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold mb-0.5">Height (cm)</span>
+                {wrapWithMic(
+                  "height",
+                  <Input
+                    ref={(el) => { if (el && registerFieldRef) registerFieldRef("height", el); }}
+                    type="number"
+                    min={30}
+                    max={250}
+                    placeholder="175"
+                    value={data.height ?? ""}
+                    onChange={(e) =>
+                      updateField("height", e.target.value ? Number(e.target.value) : null)
+                    }
+                    className={`h-7 w-20 text-sm p-1 text-center bg-white border-slate-200 ${inputClass("height")}`}
+                  />
+                )}
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold mb-0.5">Weight (kg)</span>
+                {wrapWithMic(
+                  "weight",
+                  <Input
+                    ref={(el) => { if (el && registerFieldRef) registerFieldRef("weight", el); }}
+                    type="number"
+                    min={1}
+                    max={500}
+                    placeholder="70"
+                    value={data.weight ?? ""}
+                    onChange={(e) =>
+                      updateField("weight", e.target.value ? Number(e.target.value) : null)
+                    }
+                    className={`h-7 w-20 text-sm p-1 text-center bg-white border-slate-200 ${inputClass("weight")}`}
+                  />
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold mb-0.5">BMI</span>
+                <span className="text-lg font-bold text-slate-800 leading-none">
+                  {bmi !== null ? String(bmi) : "---"}
+                </span>
+              </div>
+              {bmiCategory && (
+                <Badge className={`border-none shadow-none font-semibold rounded-md ${bmiCategory.color}`}>
+                  {bmiCategory.label}
+                </Badge>
+              )}
+            </div>
+          </div>
+
+
+
           {/* Respiratory Rate */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">Resp. Rate (breaths/min)</Label>
-            {wrapWithMic(
-              "respiratoryRate",
-              <Input
-                ref={(el) => { if (el && registerFieldRef) registerFieldRef("respiratoryRate", el); }}
-                type="number"
-                min={5}
-                max={60}
-                placeholder="e.g., 16"
-                value={data.respiratoryRate ?? ""}
-                onChange={(e) =>
-                  updateField("respiratoryRate", e.target.value ? Number(e.target.value) : null)
-                }
-                className={inputClass("respiratoryRate")}
-              />
-            )}
-            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Info className="h-2.5 w-2.5 flex-shrink-0" />
-              Normal: 12–20 breaths/min
-            </p>
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Resp. Rate</Label>
+            <div className="relative">
+              {wrapWithMic(
+                "respiratoryRate",
+                <Input
+                  ref={(el) => { if (el && registerFieldRef) registerFieldRef("respiratoryRate", el); }}
+                  type="number"
+                  min={5}
+                  max={60}
+                  placeholder="16"
+                  value={data.respiratoryRate ?? ""}
+                  onChange={(e) =>
+                    updateField("respiratoryRate", e.target.value ? Number(e.target.value) : null)
+                  }
+                  className={`w-full pr-12 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("respiratoryRate")}`}
+                />
+              )}
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium select-none pointer-events-none">
+                br/min
+              </span>
+            </div>
           </div>
 
           {/* Blood Group */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">Blood Group</Label>
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Blood Group</Label>
             <Select
               value={data.bloodGroup ?? ""}
               onValueChange={(value) => updateField("bloodGroup", value || null)}
             >
               <SelectTrigger
                 ref={(el) => { if (el && registerFieldRef) registerFieldRef("bloodGroup", el); }}
-                className={inputClass("bloodGroup")}
+                className={`w-full text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("bloodGroup")}`}
               >
-                <SelectValue placeholder="Select blood group" />
+                <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
                 {bloodGroups.map((bg) => (
@@ -313,23 +313,24 @@ export default function VitalsPage({
             </Select>
           </div>
 
-          {/* LMP Date — uses local date parsing to avoid UTC off-by-one */}
-          <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">LMP (Last Menstrual Period)</Label>
+          {/* LMP Date */}
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">LMP Date</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   ref={(el) => { if (el && registerFieldRef) registerFieldRef("lmp", el); }}
                   variant="outline"
                   className={cn(
-                    "h-8 justify-start text-left font-normal px-2 text-xs",
-                    !data.lmp && "text-muted-foreground"
+                    "w-full h-9 justify-start text-left font-normal px-3 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50",
+                    !data.lmp && "text-muted-foreground",
+                    inputClass("lmp")
                   )}
                 >
-                  <Calendar className="h-3 w-3 mr-1.5" />
+                  <Calendar className="h-4 w-4 mr-2" />
                   {data.lmp
                     ? format(parseLocalDate(data.lmp), "dd/MM/yyyy")
-                    : <span>Select date</span>
+                    : <span>Select</span>
                   }
                 </Button>
               </PopoverTrigger>
@@ -339,7 +340,6 @@ export default function VitalsPage({
                   selected={data.lmp ? parseLocalDate(data.lmp) : undefined}
                   onSelect={(date) => {
                     if (date) {
-                      // Store as local YYYY-MM-DD (no UTC shift)
                       const y = date.getFullYear();
                       const m = String(date.getMonth() + 1).padStart(2, "0");
                       const d = String(date.getDate()).padStart(2, "0");
@@ -352,7 +352,6 @@ export default function VitalsPage({
                 />
               </PopoverContent>
             </Popover>
-            <p className="text-[10px] text-muted-foreground">For female patients</p>
           </div>
 
         </div>
