@@ -31,6 +31,10 @@ export interface BaseTemplateProps {
   registerFieldRef?: (fieldName: string, element: HTMLElement | null) => void;
   prescriptionHistoryNode?: React.ReactNode;
   prescriptionHistoryLength?: number;
+  visitHistory?: Array<{
+    prescriptionId: number;
+    createdAt?: string;
+  }>;
 }
 
 export function usePatientForm(props: BaseTemplateProps) {
@@ -395,6 +399,7 @@ export function usePatientForm(props: BaseTemplateProps) {
       isProcessing: mic.isProcessing,
       isActive,
       onMicToggle: () => mic.onMicToggle(context),
+      variant: context.mode === "COMPONENT" ? "section" : "field",
       children: element,
     });
   };

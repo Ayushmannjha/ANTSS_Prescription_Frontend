@@ -1,6 +1,6 @@
 "use client";
 
-import { JSX, ReactElement } from "react";
+import { JSX, ReactElement, useMemo, useState } from "react";
 import {
   Card,
   CardHeader,
@@ -9,7 +9,23 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileSearch, Plus, Trash2, Upload, FileText, X } from "lucide-react";
+import {
+  Download,
+  Eye,
+  FileSearch,
+  Plus,
+  Trash2,
+  Upload,
+  FileText,
+  X,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PatientData, InvestigationEntry } from "../patient-form-fields/types";
 import { VoiceContext } from "@/hooks/useConsultationVoice";
 
@@ -37,6 +53,8 @@ type Props = {
     element: ReactElement<{ className?: string }>
   ) => JSX.Element;
   registerFieldRef?: (fieldName: string, el: HTMLElement | null) => void;
+  previewOpen?: boolean;
+  onPreviewOpenChange?: (open: boolean) => void;
 };
 
 export default function InvestigationsPage({
@@ -48,7 +66,35 @@ export default function InvestigationsPage({
   inputClass = () => "",
   wrapWithMic = (_, el) => el,
   registerFieldRef,
+  previewOpen,
+  onPreviewOpenChange,
 }: Props) {
+  const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
+  const [selectedInvestigationId, setSelectedInvestigationId] = useState<string | null>(null);
+  const investigations = useMemo(() => data.investigations || [], [data.investigations]);
+  const selectedInvestigation =
+    investigations.find((inv) => inv.id === selectedInvestigationId) ||
+    investigations[0] ||
+    null;
+  const isPreviewOpen = previewOpen ?? internalPreviewOpen;
+
+  const setPreviewOpen = (open: boolean) => {
+    onPreviewOpenChange?.(open);
+    if (previewOpen === undefined) {
+      setInternalPreviewOpen(open);
+    }
+  };
+
+  const openInvestigationPreview = (investigation?: InvestigationEntry) => {
+    setSelectedInvestigationId(investigation?.id || investigations[0]?.id || null);
+    setPreviewOpen(true);
+  };
+
+  const isImageReport = (investigation: InvestigationEntry) => {
+    const source = `${investigation.documentFileName || ""} ${investigation.documentUrl || ""}`.toLowerCase();
+    return /\.(png|jpe?g|gif|webp|bmp|svg)(\?|#|$)/.test(source);
+  };
+
   // Mock file upload handler
   const handleFileUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -68,6 +114,7 @@ export default function InvestigationsPage({
   };
 
   return (
+    <>
     <Card className="border-slate-200 shadow-sm rounded-xl bg-white overflow-hidden">
       <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
         <div className="flex items-center justify-between gap-2">
@@ -81,6 +128,19 @@ export default function InvestigationsPage({
             )}
           </CardTitle>
 
+          <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 px-3 text-xs bg-white hover:bg-slate-50 text-slate-600 border-slate-200"
+            onClick={() => openInvestigationPreview()}
+            disabled={investigations.length === 0}
+          >
+            <Eye className="h-3 w-3 mr-1" />
+            Preview
+          </Button>
+
           <Button
             type="button"
             size="sm"
@@ -91,6 +151,7 @@ export default function InvestigationsPage({
             <Plus className="h-3 w-3 mr-1" />
             Add
           </Button>
+          </div>
         </div>
       </CardHeader>
 
@@ -166,8 +227,15 @@ export default function InvestigationsPage({
                   {inv.documentUrl ? (
                      <div className="flex items-center gap-1 bg-sky-50 text-sky-700 px-2 py-1 rounded-md text-[10px] border border-sky-100 max-w-[90px]">
                        <FileText className="h-3 w-3 flex-shrink-0" />
-                       <span className="truncate flex-1">{inv.documentFileName}</span>
-                       <button onClick={() => handleRemoveFile(inv.id)} className="hover:text-red-500">
+                       <button
+                         type="button"
+                         onClick={() => openInvestigationPreview(inv)}
+                         className="truncate flex-1 text-left hover:underline"
+                         title="Preview lab report"
+                       >
+                         {inv.documentFileName}
+                       </button>
+                       <button type="button" onClick={() => handleRemoveFile(inv.id)} className="hover:text-red-500">
                           <X className="h-3 w-3" />
                        </button>
                      </div>
@@ -201,5 +269,147 @@ export default function InvestigationsPage({
         )}
       </CardContent>
     </Card>
+    <Dialog open={isPreviewOpen} onOpenChange={setPreviewOpen}>
+      <DialogContent className="flex h-[94vh] max-h-[94vh] !w-[calc(100vw-3rem)] !max-w-[1200px] flex-col gap-0 overflow-hidden border-slate-200 bg-slate-100 p-0">
+        <DialogHeader className="shrink-0 border-b border-slate-200 bg-white px-5 py-4 pr-14">
+          <DialogTitle className="flex items-center gap-2 text-base text-slate-900">
+            <FileSearch className="h-4 w-4 text-blue-600" />
+            Lab reports
+          </DialogTitle>
+
+          <DialogDescription className="text-xs">
+            {investigations.length > 0
+              ? `${investigations.length} investigation${investigations.length === 1 ? "" : "s"} available`
+              : "No investigations available"}
+          </DialogDescription>
+        </DialogHeader>
+
+        {selectedInvestigation ? (
+          <div className="grid min-h-0 flex-1 grid-cols-1 bg-slate-100 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className="min-h-0 overflow-y-auto border-b border-slate-200 bg-white p-3 lg:border-b-0 lg:border-r">
+              <div className="space-y-2">
+                {investigations.map((inv, index) => (
+                  <button
+                    key={inv.id}
+                    type="button"
+                    onClick={() => setSelectedInvestigationId(inv.id)}
+                    className={`flex w-full min-w-0 items-start gap-2 rounded-lg border px-3 py-2 text-left transition-colors ${
+                      selectedInvestigation.id === inv.id
+                        ? "border-blue-200 bg-blue-50 text-blue-700"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <FileSearch className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-semibold">
+                        {inv.test || `Investigation ${index + 1}`}
+                      </span>
+                      <span className="block truncate text-[10px] text-slate-400">
+                        {inv.value || "Result not entered"}
+                      </span>
+                      {inv.documentUrl && (
+                        <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-sky-600">
+                          <FileText className="h-3 w-3" />
+                          Report attached
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            <main className="grid min-h-0 grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)]">
+              <section className="min-h-0 overflow-y-auto border-b border-slate-200 bg-white p-4 lg:border-b-0 lg:border-r">
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Investigation details
+                </p>
+
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-[10px] font-semibold uppercase text-slate-400">Test Name</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">
+                      {selectedInvestigation.test || "Not entered"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-[10px] font-semibold uppercase text-slate-400">Value / Result</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">
+                      {selectedInvestigation.value || "Not entered"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-[10px] font-semibold uppercase text-slate-400">Notes</p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
+                      {selectedInvestigation.notes || "No notes added"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-[10px] font-semibold uppercase text-slate-400">Attachment</p>
+                    <p className="mt-1 truncate text-sm text-slate-700">
+                      {selectedInvestigation.documentFileName || "No report attached"}
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="flex min-h-0 flex-col">
+                <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2">
+                  <p className="min-w-0 truncate text-xs font-semibold text-slate-700">
+                    {selectedInvestigation.documentFileName || "Report preview"}
+                  </p>
+
+                  {selectedInvestigation.documentUrl && (
+                    <a
+                      href={selectedInvestigation.documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Open
+                    </a>
+                  )}
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-auto bg-slate-100 p-4">
+                  {selectedInvestigation.documentUrl ? (
+                    isImageReport(selectedInvestigation) ? (
+                      <div className="flex min-h-full items-center justify-center">
+                        <img
+                          key={selectedInvestigation.id}
+                          src={selectedInvestigation.documentUrl}
+                          alt={selectedInvestigation.documentFileName || "Lab report preview"}
+                          className="max-h-full max-w-full object-contain shadow-sm"
+                        />
+                      </div>
+                    ) : (
+                      <iframe
+                        key={selectedInvestigation.id}
+                        src={selectedInvestigation.documentUrl}
+                        title={selectedInvestigation.documentFileName || "Lab report preview"}
+                        className="h-full min-h-[640px] w-full border-0 bg-white"
+                      />
+                    )
+                  ) : (
+                    <div className="flex h-full min-h-[360px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white text-center text-sm text-slate-500">
+                      No lab report file attached for this investigation.
+                    </div>
+                  )}
+                </div>
+              </section>
+            </main>
+          </div>
+        ) : (
+          <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-slate-500">
+            Add an investigation first to preview lab reports here.
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

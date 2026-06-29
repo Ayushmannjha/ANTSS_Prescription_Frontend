@@ -97,16 +97,20 @@ export default function SplineViewerWithErrorHandling({
 
   // Global error handler for uncaught errors from the Spline viewer
   useEffect(() => {
-    if (viewerLoaded) return
-
     const originalErrorHandler = window.onerror
     const originalPromiseRejectionHandler = window.onunhandledrejection
 
     window.onerror = function (message, source, lineno, colno, error) {
       // Check if error is from spline-viewer or WebGL
       const msgStr = String(message || "").toLowerCase();
+      const sourceStr = String(source || "").toLowerCase();
       if (
-        (source && source.includes("spline-viewer")) ||
+        sourceStr.includes("spline-viewer") ||
+        sourceStr.includes("splinetool") ||
+        sourceStr.includes("@splinetool/viewer") ||
+        msgStr.includes("spline") ||
+        msgStr.includes("timeline") ||
+        msgStr.includes("missing property") ||
         msgStr.includes("webgl") ||
         msgStr.includes("context")
       ) {
@@ -128,6 +132,7 @@ export default function SplineViewerWithErrorHandling({
         if (
           lowerMsg.includes("spline") ||
           lowerMsg.includes("timeline") ||
+          lowerMsg.includes("missing property") ||
           lowerMsg.includes("webgl") ||
           lowerMsg.includes("renderer") ||
           lowerMsg.includes("context")
@@ -145,9 +150,10 @@ export default function SplineViewerWithErrorHandling({
 
     return () => {
       window.onerror = originalErrorHandler
+      window.onunhandledrejection = originalPromiseRejectionHandler
       window.removeEventListener("unhandledrejection", handleUnhandledRejection)
     }
-  }, [handleError, viewerLoaded])
+  }, [handleError])
 
   // Monitor the spline-viewer element for errors
   useEffect(() => {

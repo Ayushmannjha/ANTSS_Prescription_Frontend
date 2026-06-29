@@ -8,6 +8,9 @@ interface PrescriptionHistoryCardProps {
   viewingPrescriptionId: number | null;
   handleLoadPrescription: (prescription: any) => void;
   handleReset: () => void;
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 export function PrescriptionHistoryCard({
@@ -15,6 +18,9 @@ export function PrescriptionHistoryCard({
   viewingPrescriptionId,
   handleLoadPrescription,
   handleReset,
+  isLoading = false,
+  error = null,
+  onRetry,
 }: PrescriptionHistoryCardProps) {
   return (
     <Card className="border-slate-200 shadow-sm rounded-xl bg-white flex flex-col overflow-hidden pointer-events-auto">
@@ -37,8 +43,26 @@ export function PrescriptionHistoryCard({
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto max-h-[300px] p-4">
-        {prescriptionHistory.length === 0 ? (
+      <CardContent className="flex-1 overflow-y-auto max-h-[340px] lg:max-h-[420px] p-4">
+        {isLoading ? (
+          <div className="text-center py-6 text-sm text-muted-foreground">Loading prescription history...</div>
+        ) : error ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+            <p className="font-semibold">Prescription history unavailable</p>
+            <p className="mt-1 text-xs">{error}</p>
+            {onRetry && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 h-7 border-amber-200 bg-white px-3 text-xs text-amber-800 hover:bg-amber-100"
+                onClick={onRetry}
+              >
+                Retry
+              </Button>
+            )}
+          </div>
+        ) : prescriptionHistory.length === 0 ? (
           <div className="text-center py-6 text-sm text-muted-foreground">No prescription history found.</div>
         ) : (
           <div className="space-y-3">
@@ -69,11 +93,7 @@ export function PrescriptionHistoryCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-7 w-7 transition-colors ${
-                        viewingPrescriptionId === item.prescriptionId 
-                          ? "text-sky-600 bg-sky-100" 
-                          : "text-slate-400 group-hover:text-sky-600"
-                      }`}
+                      className="h-7 w-7 text-slate-400 hover:text-sky-600"
                       title="View Prescription"
                     >
                       <Eye className="h-4 w-4" />

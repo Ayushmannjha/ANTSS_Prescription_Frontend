@@ -152,7 +152,7 @@ export default function VitalsPage({
                   className={`w-full pr-12 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("pulse")}`}
                 />
               )}
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
+              <span className="absolute right-9 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
                 bpm
               </span>
             </div>
@@ -178,7 +178,7 @@ export default function VitalsPage({
                   className={`w-full pr-12 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("oxygenSaturation")}`}
                 />
               )}
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
+              <span className="absolute right-9 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
                 %
               </span>
             </div>
@@ -205,7 +205,7 @@ export default function VitalsPage({
                   className={`w-full pr-12 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("temperature")}`}
                 />
               )}
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
+              <span className="absolute right-9 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium select-none pointer-events-none">
                 °F
               </span>
             </div>
@@ -288,7 +288,7 @@ export default function VitalsPage({
                   className={`w-full pr-12 text-sm focus-visible:ring-sky-500 rounded-lg bg-slate-50 ${inputClass("respiratoryRate")}`}
                 />
               )}
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium select-none pointer-events-none">
+              <span className="absolute right-9 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium select-none pointer-events-none">
                 br/min
               </span>
             </div>
