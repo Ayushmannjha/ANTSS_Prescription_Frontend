@@ -245,6 +245,7 @@ export function usePrescription(prescriptionId: number | null) {
       const mappedMedicines: MappedMedicine[] = (rawPrescription.medicines || []).map((med, idx) => ({
         id: med.prescriptionMedicineId || idx,
         genericName: med.medicineName,
+        strength: med.strength,
         dosage: med.dosage,
         frequency: med.frequency,
         instructions: med.instruction || "As directed by physician",

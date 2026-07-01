@@ -10,6 +10,7 @@ export interface ApiMedicineResponse {
   frequency: string;
   duration: string;
   instruction?: string;
+  strength?: string;
   quantity?: string;
 }
 
@@ -209,6 +210,7 @@ export interface MappedMedicine {
   frequency: string;
   instructions: string;
   duration: string;
+  strength?: string;
   quantity?: string;
 }
 

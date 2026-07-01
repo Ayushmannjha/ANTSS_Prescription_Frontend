@@ -17,7 +17,6 @@ import {
   MedicineMaster,
   MedicineMasterPayload,
   getMedicineActive,
-  getMedicineId,
 } from "@/src/services/medicine.service";
 
 const DOSAGE_FORMS = [
@@ -37,12 +36,9 @@ const DOSAGE_FORMS = [
 
 type MedicineFormState = {
   medicineName: string;
+  genericName: string;
   strength: string;
   dosageForm: string;
-  defaultDosage: string;
-  defaultFrequency: string;
-  defaultDuration: string;
-  defaultInstruction: string;
   manufacturer: string;
   active: boolean;
 };
@@ -58,35 +54,27 @@ type Props = {
 
 const emptyState = (defaultName = ""): MedicineFormState => ({
   medicineName: defaultName,
+  genericName: "",
   strength: "",
   dosageForm: "Tablet",
-  defaultDosage: "",
-  defaultFrequency: "",
-  defaultDuration: "",
-  defaultInstruction: "",
   manufacturer: "",
   active: true,
 });
 
+/**
+ * Builds a `MedicineMasterPayload` from form state.
+ * Only includes fields that the backend `MedicineMasterRequest` DTO accepts.
+ */
 export function buildMedicinePayload(
-  state: MedicineFormState,
-  initialMedicine?: MedicineMaster | null
+  state: MedicineFormState
 ): MedicineMasterPayload {
-  const id = initialMedicine ? getMedicineId(initialMedicine) : undefined;
-
   return {
-    id,
-    medicineId: id,
     medicineName: state.medicineName.trim(),
-    strength: state.strength.trim(),
-    dosageForm: state.dosageForm,
-    defaultDosage: state.defaultDosage.trim(),
-    defaultFrequency: state.defaultFrequency.trim(),
-    defaultDuration: state.defaultDuration.trim(),
-    defaultInstruction: state.defaultInstruction.trim(),
-    manufacturer: state.manufacturer.trim(),
+    genericName: state.genericName.trim() || undefined,
+    strength: state.strength.trim() || undefined,
+    dosageForm: state.dosageForm || undefined,
+    manufacturer: state.manufacturer.trim() || undefined,
     active: state.active,
-    activeStatus: state.active,
   };
 }
 
@@ -105,12 +93,9 @@ export default function MedicineMasterForm({
     if (initialMedicine) {
       setForm({
         medicineName: initialMedicine.medicineName || "",
+        genericName: initialMedicine.genericName || "",
         strength: initialMedicine.strength || "",
         dosageForm: initialMedicine.dosageForm || "Tablet",
-        defaultDosage: initialMedicine.defaultDosage || "",
-        defaultFrequency: initialMedicine.defaultFrequency || "",
-        defaultDuration: initialMedicine.defaultDuration || "",
-        defaultInstruction: initialMedicine.defaultInstruction || "",
         manufacturer: initialMedicine.manufacturer || "",
         active: getMedicineActive(initialMedicine),
       });
@@ -135,14 +120,15 @@ export default function MedicineMasterForm({
       return;
     }
 
-    await onSubmit(buildMedicinePayload(form, initialMedicine));
+    await onSubmit(buildMedicinePayload(form));
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
+        {/* Medicine Name — Full Width */}
         <div className="space-y-1.5 md:col-span-2">
-          <Label htmlFor="medicineName">Medicine Name</Label>
+          <Label htmlFor="medicineName">Medicine Name *</Label>
           <Input
             id="medicineName"
             value={form.medicineName}
@@ -153,6 +139,21 @@ export default function MedicineMasterForm({
           {nameError ? <p className="text-xs text-destructive">{nameError}</p> : null}
         </div>
 
+        {/* Generic Name */}
+        <div className="space-y-1.5 md:col-span-2">
+          <Label htmlFor="genericName">Generic Name</Label>
+          <Input
+            id="genericName"
+            value={form.genericName}
+            onChange={(event) => updateField("genericName", event.target.value)}
+            placeholder="e.g., Acetaminophen"
+          />
+          <p className="text-xs text-muted-foreground">
+            The generic/chemical name of the medicine (optional)
+          </p>
+        </div>
+
+        {/* Strength */}
         <div className="space-y-1.5">
           <Label htmlFor="strength">Strength</Label>
           <Input
@@ -163,6 +164,7 @@ export default function MedicineMasterForm({
           />
         </div>
 
+        {/* Dosage Form */}
         <div className="space-y-1.5">
           <Label>Dosage Form</Label>
           <Select
@@ -182,56 +184,18 @@ export default function MedicineMasterForm({
           </Select>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="defaultDosage">Default Dosage</Label>
-          <Input
-            id="defaultDosage"
-            value={form.defaultDosage}
-            onChange={(event) => updateField("defaultDosage", event.target.value)}
-            placeholder="e.g., 1 tablet"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="defaultFrequency">Default Frequency</Label>
-          <Input
-            id="defaultFrequency"
-            value={form.defaultFrequency}
-            onChange={(event) => updateField("defaultFrequency", event.target.value)}
-            placeholder="e.g., BD"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="defaultDuration">Default Duration</Label>
-          <Input
-            id="defaultDuration"
-            value={form.defaultDuration}
-            onChange={(event) => updateField("defaultDuration", event.target.value)}
-            placeholder="e.g., 5 days"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="defaultInstruction">Default Instruction</Label>
-          <Input
-            id="defaultInstruction"
-            value={form.defaultInstruction}
-            onChange={(event) => updateField("defaultInstruction", event.target.value)}
-            placeholder="e.g., after food"
-          />
-        </div>
-
+        {/* Manufacturer */}
         <div className="space-y-1.5">
           <Label htmlFor="manufacturer">Manufacturer</Label>
           <Input
             id="manufacturer"
             value={form.manufacturer}
             onChange={(event) => updateField("manufacturer", event.target.value)}
-            placeholder="Manufacturer"
+            placeholder="e.g., Sun Pharma"
           />
         </div>
 
+        {/* Active Status */}
         <div className="flex items-center justify-between rounded-md border px-3 py-2">
           <Label htmlFor="activeStatus" className="text-sm">
             Active Status

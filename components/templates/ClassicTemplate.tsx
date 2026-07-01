@@ -69,6 +69,7 @@ export default function ClassicTemplate(props: BaseTemplateProps) {
           <MedicinesPage
             data={data}
             addMedicine={helpers.addMedicine}
+            duplicateMedicine={helpers.duplicateMedicine}
             removeMedicine={helpers.removeMedicine}
             updateMedicine={helpers.updateMedicine}
             applyMedicineMaster={helpers.applyMedicineMaster}
