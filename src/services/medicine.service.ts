@@ -1,35 +1,36 @@
 import { apiClient } from "./axios";
 
+/**
+ * Matches the backend JPA entity `MedicineMaster`.
+ * Fields: medicineId, medicineName, genericName, strength, dosageForm, manufacturer, active, createdAt
+ */
 export type MedicineMaster = {
-  id?: number | string;
-  medicineId?: number | string;
+  medicineId: number;
   medicineName: string;
+  genericName?: string;
   strength?: string;
   dosageForm?: string;
-  defaultDosage?: string;
-  defaultFrequency?: string;
-  defaultDuration?: string;
-  defaultInstruction?: string;
   manufacturer?: string;
   active?: boolean;
-  activeStatus?: boolean;
+  createdAt?: string;
 };
 
+/**
+ * Matches the backend `MedicineMasterRequest` DTO exactly.
+ * Fields: medicineName (required), genericName, strength, dosageForm, manufacturer, active
+ */
 export type MedicineMasterPayload = {
-  id?: number | string;
-  medicineId?: number | string;
   medicineName: string;
+  genericName?: string;
   strength?: string;
   dosageForm?: string;
-  defaultDosage?: string;
-  defaultFrequency?: string;
-  defaultDuration?: string;
-  defaultInstruction?: string;
   manufacturer?: string;
   active?: boolean;
-  activeStatus?: boolean;
 };
 
+/**
+ * Normalize backend list responses — handles arrays, wrapped { data: [] }, and paginated { content: [] }.
+ */
 const normalizeList = (response: any): MedicineMaster[] => {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.data)) return response.data;
@@ -37,53 +38,92 @@ const normalizeList = (response: any): MedicineMaster[] => {
   return [];
 };
 
+/**
+ * Normalize a single medicine response — handles raw entity and wrapped { data: {} }.
+ */
 const normalizeMedicine = (response: any): MedicineMaster => {
   if (response?.data && !Array.isArray(response.data)) return response.data;
   return response;
 };
 
-const withParams = (params?: Record<string, any>) => ({
-  params: {
-    ...(params || {}),
-  },
-});
+/**
+ * Extract the medicine ID from a `MedicineMaster` entity.
+ * The backend entity uses `medicineId` as the primary key.
+ */
+export const getMedicineId = (medicine: MedicineMaster): number | undefined =>
+  medicine.medicineId;
 
-export const getMedicineId = (medicine: MedicineMaster) =>
-  medicine.id ?? medicine.medicineId;
-
-export const getMedicineActive = (medicine: MedicineMaster) =>
-  medicine.activeStatus ?? medicine.active ?? true;
+/**
+ * Extract the active status from a `MedicineMaster` entity.
+ */
+export const getMedicineActive = (medicine: MedicineMaster): boolean =>
+  medicine.active ?? true;
 
 export const medicineService = {
-  createMedicine: (medicine: MedicineMasterPayload, doctorUserId?: string): Promise<MedicineMaster> => {
+  /**
+   * POST /api/medicines — Create a new medicine master entry.
+   */
+  createMedicine: (payload: MedicineMasterPayload): Promise<MedicineMaster> => {
     return apiClient
-      .post<any>("/api/medicines", medicine)
+      .post<any>("/api/medicines", payload)
       .then(normalizeMedicine);
   },
 
-  saveMedicine: (medicine: MedicineMasterPayload, doctorUserId?: string): Promise<MedicineMaster> => {
+  /**
+   * POST /api/medicines — Alias for createMedicine (backend only has POST).
+   */
+  saveMedicine: (payload: MedicineMasterPayload): Promise<MedicineMaster> => {
     return apiClient
-      .post<any>("/api/medicines", medicine)
+      .post<any>("/api/medicines", payload)
       .then(normalizeMedicine);
   },
 
-  getMedicines: async (doctorUserId?: string): Promise<MedicineMaster[]> => {
+  /**
+   * "Update" a medicine by deleting the old one and creating a new one.
+   * The backend has no PUT endpoint, so this is the only approach without backend changes.
+   * Returns the newly created medicine (with a new medicineId).
+   */
+  updateMedicine: async (
+    oldMedicineId: number,
+    payload: MedicineMasterPayload
+  ): Promise<MedicineMaster> => {
+    await apiClient.delete<void>(`/api/medicines/${oldMedicineId}`);
+    return apiClient
+      .post<any>("/api/medicines", payload)
+      .then(normalizeMedicine);
+  },
+
+  /**
+   * GET /api/medicines — Fetch all medicines for the current user.
+   */
+  getMedicines: async (): Promise<MedicineMaster[]> => {
     const response = await apiClient.get<any>("/api/medicines");
     return normalizeList(response);
   },
 
-  getMedicineById: (id: number | string, doctorUserId?: string): Promise<MedicineMaster> => {
+  /**
+   * GET /api/medicines/{id} — Fetch a single medicine by ID.
+   */
+  getMedicineById: (id: number): Promise<MedicineMaster> => {
     return apiClient
       .get<any>(`/api/medicines/${id}`)
       .then(normalizeMedicine);
   },
 
-  searchMedicines: async (keyword: string, doctorUserId?: string): Promise<MedicineMaster[]> => {
-    const response = await apiClient.get<any>("/api/medicines/search", withParams({ keyword }));
+  /**
+   * GET /api/medicines/search?keyword=... — Search medicines by keyword.
+   */
+  searchMedicines: async (keyword: string): Promise<MedicineMaster[]> => {
+    const response = await apiClient.get<any>("/api/medicines/search", {
+      params: { keyword },
+    });
     return normalizeList(response);
   },
 
-  deleteMedicine: (id: number | string, doctorUserId?: string): Promise<void> => {
+  /**
+   * DELETE /api/medicines/{id} — Delete a medicine by ID.
+   */
+  deleteMedicine: (id: number): Promise<void> => {
     return apiClient.delete<void>(`/api/medicines/${id}`);
   },
 };

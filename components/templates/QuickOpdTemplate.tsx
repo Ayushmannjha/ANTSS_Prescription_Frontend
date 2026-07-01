@@ -72,6 +72,7 @@ export default function QuickOpdTemplate(props: BaseTemplateProps) {
             <MedicinesPage
               data={data}
               addMedicine={helpers.addMedicine}
+              duplicateMedicine={helpers.duplicateMedicine}
               removeMedicine={helpers.removeMedicine}
               updateMedicine={helpers.updateMedicine}
               applyMedicineMaster={helpers.applyMedicineMaster}

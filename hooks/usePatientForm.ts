@@ -97,14 +97,26 @@ export function usePatientForm(props: BaseTemplateProps) {
               ...m,
               medicineName: medicine.medicineName || "",
               strength: medicine.strength || "",
-              dosage: medicine.defaultDosage || "",
-              frequency: medicine.defaultFrequency || "",
-              duration: medicine.defaultDuration || "",
-              instruction: medicine.defaultInstruction || "",
+              dosage: m.dosage || "",
+              frequency: m.frequency || "",
+              duration: m.duration || "",
+              instruction: m.instruction || "",
             }
           : m
       )
     );
+  };
+
+  const duplicateMedicine = (id: string) => {
+    const source = data.medicines.find((m) => m.id === id);
+    if (!source) return;
+    updateField("medicines", [
+      ...data.medicines,
+      {
+        ...source,
+        id: crypto.randomUUID(),
+      },
+    ]);
   };
 
   const removeMedicine = (id: string) => {
@@ -424,6 +436,7 @@ export function usePatientForm(props: BaseTemplateProps) {
     addMedicine,
     updateMedicine,
     applyMedicineMaster,
+    duplicateMedicine,
     removeMedicine,
     addComplaint,
     updateComplaint,

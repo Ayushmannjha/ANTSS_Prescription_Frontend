@@ -74,7 +74,10 @@ export const MedicationTable: React.FC<MedicationTableProps> = ({ medicines }) =
                 <tr key={med.id || index} className="border-b border-slate-200 text-[11px] text-slate-800 align-top">
                   {/* Name Column */}
                   <td className="py-2.5 pr-4">
-                    <div className="font-bold text-slate-900">{index + 1}) {med.genericName?.toUpperCase()}</div>
+                    <div className="font-bold text-slate-900">
+                      {index + 1}) {med.genericName?.toUpperCase()}
+                      {med.strength && <span className="ml-1 text-slate-500 font-normal">({med.strength})</span>}
+                    </div>
                   </td>
                   
                   {/* Dosage Column */}

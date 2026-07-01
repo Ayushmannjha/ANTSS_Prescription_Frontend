@@ -25,8 +25,17 @@ type Props = {
 
 const SEARCH_DELAY_MS = 300;
 
+/**
+ * Build a display label from a MedicineMaster entity using actual backend fields.
+ */
 const medicineLabel = (medicine: MedicineMaster) =>
   [medicine.medicineName, medicine.strength].filter(Boolean).join(" ");
+
+/**
+ * Build the secondary info line from actual backend fields.
+ */
+const medicineSubLabel = (medicine: MedicineMaster) =>
+  [medicine.dosageForm, medicine.genericName].filter(Boolean).join(" • ") || "Medicine";
 
 export default function MedicineAutocomplete({
   value,
@@ -255,9 +264,7 @@ export default function MedicineAutocomplete({
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{medicineLabel(medicine)}</span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    {[medicine.dosageForm, medicine.defaultDosage, medicine.defaultFrequency]
-                      .filter(Boolean)
-                      .join(" • ") || "Master medicine"}
+                    {medicineSubLabel(medicine)}
                   </span>
                 </span>
                 {medicine.manufacturer ? (

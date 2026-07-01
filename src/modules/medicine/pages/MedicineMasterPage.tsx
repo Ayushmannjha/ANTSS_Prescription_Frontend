@@ -47,7 +47,7 @@ export default function MedicineMasterPage() {
   const [medicines, setMedicines] = useState<MedicineMaster[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [searchText, setSearchText] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<MedicineMaster | null>(null);
@@ -59,10 +59,9 @@ export default function MedicineMasterPage() {
     return medicines.filter((medicine) =>
       [
         medicine.medicineName,
+        medicine.genericName,
         medicine.strength,
         medicine.dosageForm,
-        medicine.defaultDosage,
-        medicine.defaultFrequency,
         medicine.manufacturer,
       ]
         .filter(Boolean)
@@ -112,10 +111,21 @@ export default function MedicineMasterPage() {
   const handleSubmit = async (payload: MedicineMasterPayload) => {
     setSaving(true);
     try {
-      await medicineService.saveMedicine(payload);
-      toast({
-        title: editingMedicine ? "Medicine updated successfully." : "Medicine added successfully.",
-      });
+      if (editingMedicine) {
+        // UPDATE: Backend has no PUT endpoint, so we delete + create.
+        const oldId = getMedicineId(editingMedicine);
+        if (oldId) {
+          await medicineService.updateMedicine(oldId, payload);
+        } else {
+          // Fallback: if no ID found, just create
+          await medicineService.createMedicine(payload);
+        }
+        toast({ title: "Medicine updated successfully." });
+      } else {
+        await medicineService.createMedicine(payload);
+        toast({ title: "Medicine added successfully." });
+      }
+
       setDialogOpen(false);
       setEditingMedicine(null);
       await loadMedicines();
@@ -135,13 +145,13 @@ export default function MedicineMasterPage() {
     if (!id) {
       toast({
         title: "Unable to delete medicine",
-        description: "Medicine id was not returned by the server.",
+        description: "Medicine ID was not returned by the server.",
         variant: "destructive",
       });
       return;
     }
 
-    const confirmed = window.confirm(`Delete ${medicine.medicineName}?`);
+    const confirmed = window.confirm(`Delete "${medicine.medicineName}"?`);
     if (!confirmed) return;
 
     setDeletingId(id);
@@ -170,7 +180,7 @@ export default function MedicineMasterPage() {
             </div>
             <div>
               <h1 className="text-lg font-semibold">Medicine Master</h1>
-              <p className="text-xs text-muted-foreground">Reusable defaults for prescriptions</p>
+              <p className="text-xs text-muted-foreground">Manage your medicine catalog for prescriptions</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -194,7 +204,7 @@ export default function MedicineMasterPage() {
             <div>
               <CardTitle className="text-base">Medicine List</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                Add, edit, delete, and keep defaults ready for prescription entry.
+                Add, edit, delete, and keep your medicine catalog ready for prescriptions.
               </p>
             </div>
             <div className="flex w-full gap-2 sm:w-auto">
@@ -237,17 +247,17 @@ export default function MedicineMasterPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Medicine</TableHead>
-                    <TableHead>Defaults</TableHead>
+                    <TableHead>Generic Name</TableHead>
                     <TableHead>Manufacturer</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMedicines.map((medicine, index) => {
-                    const id = getMedicineId(medicine) ?? index;
+                  {filteredMedicines.map((medicine) => {
+                    const id = getMedicineId(medicine);
                     return (
-                      <TableRow key={String(id)}>
+                      <TableRow key={id ?? medicine.medicineName}>
                         <TableCell>
                           <div className="font-medium">{medicine.medicineName}</div>
                           <div className="text-xs text-muted-foreground">
@@ -256,13 +266,8 @@ export default function MedicineMasterPage() {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            {[medicine.defaultDosage, medicine.defaultFrequency, medicine.defaultDuration]
-                              .filter(Boolean)
-                              .join(" • ") || "-"}
+                            {medicine.genericName || "-"}
                           </div>
-                          {medicine.defaultInstruction ? (
-                            <div className="text-xs text-muted-foreground">{medicine.defaultInstruction}</div>
-                          ) : null}
                         </TableCell>
                         <TableCell>{medicine.manufacturer || "-"}</TableCell>
                         <TableCell>
@@ -313,7 +318,9 @@ export default function MedicineMasterPage() {
           <DialogHeader>
             <DialogTitle>{editingMedicine ? "Edit Medicine" : "Add Medicine"}</DialogTitle>
             <DialogDescription>
-              Medicine name is required. Defaults are used only to auto-fill prescriptions.
+              {editingMedicine
+                ? "Update this medicine's details. The medicine will be re-created with the new data."
+                : "Add a new medicine to your catalog. Medicine name is required."}
             </DialogDescription>
           </DialogHeader>
           <MedicineMasterForm
