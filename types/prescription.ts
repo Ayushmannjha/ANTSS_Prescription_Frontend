@@ -10,7 +10,6 @@ export interface ApiMedicineResponse {
   frequency: string;
   duration: string;
   instruction?: string;
-  strength?: string;
   quantity?: string;
 }
 
