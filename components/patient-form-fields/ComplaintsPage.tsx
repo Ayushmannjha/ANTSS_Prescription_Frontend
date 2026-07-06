@@ -97,7 +97,7 @@ export default function ComplaintsPage({
         {complaints.length === 0 ? (
           <div className="flex items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-white px-4 py-8 text-center shadow-sm">
             <div>
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-red-600">
                 <BadgePlus className="h-6 w-6" />
               </div>
 
