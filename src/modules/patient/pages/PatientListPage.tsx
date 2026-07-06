@@ -295,10 +295,7 @@ export default function PatientListPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => router.push("/medicine-master")} className="gap-2">
-                <Pill className="h-4 w-4" />
-                Medicine Master
-              </Button>
+              
               <PatientRegistrationModal onPatientRegistered={handlePatientRegistered} />
             </div>
           </div>
