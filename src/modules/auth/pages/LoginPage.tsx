@@ -13,7 +13,7 @@ type AuthView = "login" | "forgot-password" | "reset-password";
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token") || "";
+  const token = searchParams.get("resetToken") || searchParams.get("token") || "";
 
   const [view, setView] = useState<AuthView>("login");
   const [mounted, setMounted] = useState(false);
