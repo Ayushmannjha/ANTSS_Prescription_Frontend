@@ -420,12 +420,19 @@ export function usePatientForm(props: BaseTemplateProps) {
       return;
     }
 
+    const savedPrescriptionId = Number((data as any).prescriptionId);
+
     try {
       localStorage.setItem("prescriptionData", JSON.stringify(data));
     } catch (e) {
       console.error("Failed to save prescription data:", e);
     }
-    window.open("/prescription", "_blank");
+    window.open(
+      Number.isFinite(savedPrescriptionId) && savedPrescriptionId > 0
+        ? `/prescription?id=${savedPrescriptionId}`
+        : "/prescription",
+      "_blank"
+    );
   };
 
   return {

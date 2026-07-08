@@ -864,16 +864,31 @@ export default function ConsultationPage() {
         return p.createdAt.startsWith(todayYYYYMMDD);
       });
 
+      let savedPrescriptionId = sameDayPrescription?.prescriptionId ? Number(sameDayPrescription.prescriptionId) : null;
       if (sameDayPrescription) {
-        await prescriptionService.updatePrescription(sameDayPrescription.prescriptionId, payload);
+        const updateResponse = await prescriptionService.updatePrescription(sameDayPrescription.prescriptionId, payload);
+        savedPrescriptionId =
+          Number(updateResponse?.prescriptionId || updateResponse?.data?.prescriptionId || savedPrescriptionId) ||
+          savedPrescriptionId;
       } else {
-        await prescriptionService.savePrescription(payload);
+        const saveResponse = await prescriptionService.savePrescription(payload);
+        savedPrescriptionId =
+          Number(saveResponse?.prescriptionId || saveResponse?.data?.prescriptionId || saveResponse?.id) ||
+          savedPrescriptionId;
+      }
+      if (savedPrescriptionId) {
+        setViewingPrescriptionId(savedPrescriptionId);
+        setPatientData((prev) => ({
+          ...prev,
+          prescriptionId: savedPrescriptionId,
+        } as PatientData & { prescriptionId: number }));
       }
 
       if (originalPatient) {
         const updatedPatient = {
           ...originalPatient,
           ...patientData,
+          ...(savedPrescriptionId ? { prescriptionId: savedPrescriptionId } : {}),
         };
         const storedPatients = localStorage.getItem("patients");
         if (storedPatients) {

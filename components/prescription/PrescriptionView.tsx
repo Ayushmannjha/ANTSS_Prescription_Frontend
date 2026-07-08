@@ -130,7 +130,12 @@ function PaginatedPrescriptionDocument({
       {
         key: "footer",
         isFooter: true,
-        node: <PrescriptionFooter doctor={prescription.doctor} prescriptionId={prescriptionId} />,
+        node: (
+          <PrescriptionFooter
+            doctor={prescription.doctor}
+            prescriptionId={prescriptionId || prescription.prescriptionId || undefined}
+          />
+        ),
       },
     ];
 

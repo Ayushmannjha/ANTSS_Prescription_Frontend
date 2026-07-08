@@ -8,12 +8,13 @@ interface PrescriptionFooterProps {
 }
 
 export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, prescriptionId }) => {
-  // If we have an ID, point to it and add a 30-minute expiration timestamp.
-  const prescriptionUrl = typeof window !== "undefined" 
-    ? (prescriptionId 
-        ? `${window.location.origin}/prescription?id=${prescriptionId}&expires=${Date.now() + 30 * 60 * 1000}` 
-        : window.location.href)
-    : "https://example.com";
+  const validPrescriptionId = Number(prescriptionId);
+  // QR must only point to a saved prescription URL. A local /prescription print preview
+  // depends on browser localStorage and will not work when scanned from another device.
+  const prescriptionUrl =
+    typeof window !== "undefined" && Number.isFinite(validPrescriptionId) && validPrescriptionId > 0
+      ? `${window.location.origin}/prescription?id=${validPrescriptionId}&expires=${Date.now() + 30 * 60 * 1000}`
+      : "";
 
   return (
     <footer className="prescription-footer mt-8">
@@ -22,10 +23,18 @@ export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, 
         {/* Left Side: QR Code */}
         <div className="pl-4">
           <div className="flex flex-col items-start">
-            <div className="p-1.5 bg-white border border-slate-200 inline-block mb-1">
-              <QRCode value={prescriptionUrl} size={64} level="M" />
-            </div>
-            <span className="text-[8px] text-slate-500 tracking-wider font-semibold">SCAN FOR DIGITAL COPY</span>
+            {prescriptionUrl ? (
+              <>
+                <div className="p-1.5 bg-white border border-slate-200 inline-block mb-1">
+                  <QRCode value={prescriptionUrl} size={64} level="M" />
+                </div>
+                <span className="text-[8px] text-slate-500 tracking-wider font-semibold">SCAN FOR DIGITAL COPY</span>
+              </>
+            ) : (
+              <div className="w-[78px] text-[8px] font-semibold uppercase leading-tight tracking-wider text-slate-400">
+                Save prescription to generate QR
+              </div>
+            )}
           </div>
         </div>
 
