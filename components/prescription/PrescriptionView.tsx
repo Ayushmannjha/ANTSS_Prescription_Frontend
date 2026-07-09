@@ -134,6 +134,7 @@ function PaginatedPrescriptionDocument({
           <PrescriptionFooter
             doctor={prescription.doctor}
             prescriptionId={prescriptionId || prescription.prescriptionId || undefined}
+            prescriptionData={prescription}
           />
         ),
       },

@@ -7,9 +7,10 @@ import { qrCodeService } from "@services/qrCode.service";
 interface PrescriptionFooterProps {
   doctor: MappedDoctorInfo;
   prescriptionId?: number;
+  prescriptionData?: any;
 }
 
-export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, prescriptionId }) => {
+export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, prescriptionId, prescriptionData }) => {
   const validPrescriptionId = Number(prescriptionId);
   const [mounted, setMounted] = React.useState(false);
   const [prescriptionUrl, setPrescriptionUrl] = React.useState("");
@@ -17,7 +18,7 @@ export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, 
   React.useEffect(() => {
     setMounted(true);
     if (Number.isFinite(validPrescriptionId) && validPrescriptionId > 0) {
-      const qrDetails = qrCodeService.generateQrCodeDetails(validPrescriptionId);
+      const qrDetails = qrCodeService.generateQrCodeDetails(validPrescriptionId, 24, prescriptionData);
       setPrescriptionUrl(qrDetails.qrUrl);
     }
   }, [validPrescriptionId]);

@@ -12,6 +12,7 @@ function DownloadContent() {
   const idParam = searchParams.get("id");
   const tokenParam = searchParams.get("token");
   const expiresParam = searchParams.get("expires");
+  const dataParam = searchParams.get("data");
 
   const [verifying, setVerifying] = useState(true);
   const [isValid, setIsValid] = useState(false);
@@ -20,6 +21,7 @@ function DownloadContent() {
   const [downloadComplete, setDownloadComplete] = useState(false);
   const [formattedExpiry, setFormattedExpiry] = useState("");
   const [prescriptionId, setPrescriptionId] = useState<number | null>(null);
+  const [decodedPrescription, setDecodedPrescription] = useState<any>(null);
 
   useEffect(() => {
     async function verifyLink() {
@@ -74,16 +76,23 @@ function DownloadContent() {
 
   // Handle PDF Download
   const handleDownload = async () => {
-    if (!prescriptionId || downloading) return;
-
+    if (!prescriptionId) return;
+    
+    setDownloading(true);
+    
     try {
-      setDownloading(true);
-      const pdfBlob = await qrCodeService.downloadPrescriptionPdf(prescriptionId);
-      qrCodeService.triggerBlobDownload(pdfBlob, `Prescription-${prescriptionId}.pdf`);
+      // Small timeout to allow state to reflect downloading
+      await new Promise(resolve => setTimeout(resolve, 300));
+      window.print();
+      
       setDownloadComplete(true);
-    } catch (error) {
-      console.error("PDF download failed:", error);
-      alert("Failed to retrieve prescription PDF. Please retry.");
+      // Reset status after a few seconds
+      setTimeout(() => {
+        setDownloadComplete(false);
+      }, 4000);
+    } catch (err) {
+      console.error("Download failed:", err);
+      // Fallback
     } finally {
       setDownloading(false);
     }
@@ -143,11 +152,11 @@ function DownloadContent() {
             className="flex items-center gap-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
             {downloading ? (
-              <><span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> Generating File...</>
+              <><span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> Preparing File...</>
             ) : downloadComplete ? (
-              <><CheckCircle2 className="w-4 h-4 text-emerald-400" /> File Saved</>
+              <><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Saved</>
             ) : (
-              <><FileDown className="w-4 h-4" /> Download PDF Data</>
+              <><FileDown className="w-4 h-4" /> Download Full PDF</>
             )}
           </button>
         </div>
@@ -155,8 +164,11 @@ function DownloadContent() {
 
       {/* Render Actual Prescription Content */}
       <div className="flex-1 w-full bg-slate-100">
-        {prescriptionId && (
-          <PrescriptionView prescriptionId={prescriptionId} />
+        {(decodedPrescription || prescriptionId) && (
+          <PrescriptionView 
+            prescriptionId={decodedPrescription ? undefined : (prescriptionId || undefined)} 
+            prescription={decodedPrescription} 
+          />
         )}
       </div>
     </div>

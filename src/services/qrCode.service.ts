@@ -15,16 +15,25 @@ export const qrCodeService = {
    * Generates a unique QR code URL, expiration timestamp, and download endpoint.
    * By default, the link is valid for 24 hours.
    */
-  generateQrCodeDetails: (prescriptionId: number, durationHours: number = 24): QrCodeDetails => {
+  generateQrCodeDetails: (prescriptionId: number, durationHours: number = 24, prescriptionData?: any): QrCodeDetails => {
     // Generate a unique token for the QR link
     const uniqueToken = `qr_${Math.random().toString(36).substring(2, 11)}_${Date.now()}`;
     
     // Configurable duration (default 24 hours) converted to milliseconds
     const expiresMs = Date.now() + durationHours * 60 * 60 * 1000;
     
+    let encodedData = "";
+    if (prescriptionData) {
+      try {
+        encodedData = `&data=${btoa(encodeURIComponent(JSON.stringify(prescriptionData)))}`;
+      } catch (e) {
+        console.warn("Failed to encode prescription data for QR", e);
+      }
+    }
+    
     // Construct the absolute download landing page URL
     const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
-    const qrUrl = `${origin}/prescription/download?id=${prescriptionId}&token=${uniqueToken}&expires=${expiresMs}`;
+    const qrUrl = `${origin}/prescription/download?id=${prescriptionId}&token=${uniqueToken}&expires=${expiresMs}${encodedData}`;
     
     // Mock backend download API endpoint
     const downloadUrl = `/api/prescription/download/${prescriptionId}`;
