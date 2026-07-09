@@ -9,12 +9,15 @@ interface PrescriptionFooterProps {
 
 export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, prescriptionId }) => {
   const validPrescriptionId = Number(prescriptionId);
-  // QR must only point to a saved prescription URL. A local /prescription print preview
-  // depends on browser localStorage and will not work when scanned from another device.
-  const prescriptionUrl =
-    typeof window !== "undefined" && Number.isFinite(validPrescriptionId) && validPrescriptionId > 0
-      ? `${window.location.origin}/prescription?id=${validPrescriptionId}&expires=${Date.now() + 30 * 60 * 1000}`
-      : "";
+  const [mounted, setMounted] = React.useState(false);
+  const [prescriptionUrl, setPrescriptionUrl] = React.useState("");
+
+  React.useEffect(() => {
+    setMounted(true);
+    if (Number.isFinite(validPrescriptionId) && validPrescriptionId > 0) {
+      setPrescriptionUrl(`${window.location.origin}/prescription?id=${validPrescriptionId}`);
+    }
+  }, [validPrescriptionId]);
 
   return (
     <footer className="prescription-footer mt-8">
@@ -23,7 +26,7 @@ export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, 
         {/* Left Side: QR Code */}
         <div className="pl-4">
           <div className="flex flex-col items-start">
-            {prescriptionUrl ? (
+            {mounted && prescriptionUrl ? (
               <>
                 <div className="p-1.5 bg-white border border-slate-200 inline-block mb-1">
                   <QRCode value={prescriptionUrl} size={64} level="M" />

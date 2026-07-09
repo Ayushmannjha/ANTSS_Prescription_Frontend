@@ -374,6 +374,7 @@ export function usePrescription(prescriptionId: number | null) {
 
       const mappedPrescription: MappedPrescription = {
         prescriptionId: rawPrescription.prescriptionId,
+        createdAt: rawPrescription.createdAt,
         clinic: mappedClinic,
         doctor: mappedDoctor,
         patient: mappedPatient,

@@ -304,6 +304,7 @@ export function convertPatientDataToPrescription(
 
   return {
     prescriptionId: Number(patientData.prescriptionId || consultation.consultationId) || 0,
+    createdAt: patientData.createdAt || consultation.createdAt || new Date().toISOString(),
     clinic: dynamicClinicInfo,
     doctor: dynamicDoctorInfo,
     patient: {

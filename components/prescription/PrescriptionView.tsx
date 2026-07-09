@@ -417,6 +417,29 @@ export default function PrescriptionView({ prescription: directPrescription, pre
     );
   }
 
+  // 3.5 Expiry Check (Security check against creation date)
+  if (prescription && prescription.createdAt) {
+    const createdMs = new Date(prescription.createdAt).getTime();
+    if (!isNaN(createdMs) && Date.now() - createdMs > 30 * 60 * 1000) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white border border-red-200 rounded-xl p-8 shadow-lg text-center">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Link Expired</h2>
+            <p className="text-slate-600 mb-6">
+              For security and privacy reasons, this prescription link was only valid for 30 minutes and has now expired.
+            </p>
+            <p className="text-sm text-slate-500">
+              Please contact your clinic to request a new digital copy.
+            </p>
+          </div>
+        </div>
+      );
+    }
+  }
+
   // 4. Normal Render State
   return (
     <div className="min-h-screen bg-slate-100 py-8 px-4 flex flex-col items-center justify-start print:bg-white print:py-0 print:px-0">

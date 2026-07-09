@@ -241,4 +241,5 @@ export interface MappedPrescription {
   };
   additionalNotes?: string;
   documents?: ApiDocumentResponse[];
+  createdAt?: string;
 }
