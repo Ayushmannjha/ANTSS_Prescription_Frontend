@@ -417,9 +417,9 @@ export default function PrescriptionView({ prescription: directPrescription, pre
     );
   }
 
-  // 3.5 Expiry Check (Security check against creation date)
-  if (prescription && prescription.createdAt) {
-    const createdMs = new Date(prescription.createdAt).getTime();
+  // 3.5 Expiry Check (Security check against creation date - disabled for permanent access)
+  if (prescription && prescription.createdAt && false) {
+    const createdMs = new Date(prescription!.createdAt!).getTime();
     if (!isNaN(createdMs) && Date.now() - createdMs > 30 * 60 * 1000) {
       return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">

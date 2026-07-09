@@ -111,8 +111,8 @@ function PrescriptionContent() {
 
   // Handle Expiration Logic
   const expiresParam = searchParams.get("expires");
-  if (expiresParam) {
-    const expiresMs = parseInt(expiresParam, 10);
+  if (expiresParam && false) {
+    const expiresMs = parseInt(expiresParam as string, 10);
     if (!isNaN(expiresMs) && Date.now() > expiresMs) {
       return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">

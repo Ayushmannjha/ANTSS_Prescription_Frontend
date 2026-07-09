@@ -1,6 +1,8 @@
 import React from "react";
 import QRCode from "react-qr-code";
 import { MappedDoctorInfo } from "@/types/prescription";
+import { qrCodeService } from "@services/qrCode.service";
+
 
 interface PrescriptionFooterProps {
   doctor: MappedDoctorInfo;
@@ -15,7 +17,8 @@ export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, 
   React.useEffect(() => {
     setMounted(true);
     if (Number.isFinite(validPrescriptionId) && validPrescriptionId > 0) {
-      setPrescriptionUrl(`${window.location.origin}/prescription?id=${validPrescriptionId}`);
+      const qrDetails = qrCodeService.generateQrCodeDetails(validPrescriptionId);
+      setPrescriptionUrl(qrDetails.qrUrl);
     }
   }, [validPrescriptionId]);
 
