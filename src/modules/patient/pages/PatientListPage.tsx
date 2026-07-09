@@ -28,6 +28,7 @@ import { usePrescriptionStore } from "@/src/store/prescriptionStore";
 import { PatientData } from "../types";
 import { prescriptionService } from "@/src/services/prescription.service";
 import { patientService } from "@/src/services/patient.service";
+import { API_BASE_URL } from "@/src/services/axios";
 
 import PatientRegistrationModal from "../components/PatientRegistrationModal";
 import PatientTable from "../components/PatientTable";
@@ -42,7 +43,7 @@ export default function PatientListPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, initialize, logout } = useAuthStore();
-  const { patients, consultations, fetchPatients, loading } = usePatientStore();
+  const { patients, consultations, fetchPatients, upsertRegistration, loading } = usePatientStore();
   const { savePrescription } = usePrescriptionStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,6 +87,33 @@ export default function PatientListPage() {
     window.addEventListener('app-route-change', handleRouteChange);
     return () => window.removeEventListener('app-route-change', handleRouteChange);
   }, [pathname]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (pathname !== "/patients" || !token) return;
+
+    const wsBaseUrl = API_BASE_URL.replace(/^http/, "ws").replace(/\/+$/, "");
+    const socket = new WebSocket(`${wsBaseUrl}/ws/patient-registrations`);
+
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload?.type === "PATIENT_REGISTRATION_CREATED") {
+          upsertRegistration(payload);
+          setNotificationToast("New patient registration received");
+          setTimeout(() => setNotificationToast(null), 3500);
+        }
+      } catch (err) {
+        console.warn("Invalid patient registration websocket event", err);
+      }
+    };
+
+    socket.onerror = () => {
+      console.warn("Patient registration websocket connection failed");
+    };
+
+    return () => socket.close();
+  }, [pathname, upsertRegistration]);
 
   const handlePatientRegistered = (newPatient: PatientData) => {
     fetchData();

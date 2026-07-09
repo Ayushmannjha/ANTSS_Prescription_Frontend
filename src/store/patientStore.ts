@@ -13,6 +13,7 @@ interface PatientState {
   error: string | null;
   activePatient: PatientResponse | null;
   fetchPatients: () => Promise<void>;
+  upsertRegistration: (registration: any) => void;
   setActivePatient: (patient: PatientResponse | null) => void;
   registerPatient: (data: any) => Promise<any>;
 }
@@ -23,6 +24,41 @@ export const usePatientStore = create<PatientState>((set) => ({
   loading: false,
   error: null,
   activePatient: null,
+
+  upsertRegistration: (registration) => {
+    const p = registration.patient || {};
+    const mappedPatient: any = {
+      patientId: p.patientId,
+      patientName: p.patientName,
+      mobileNumber: p.mobileNumber,
+      gender: p.gender,
+      age: p.age,
+      address: p.address,
+      state: p.state,
+      city: p.city,
+      pincode: p.pincode,
+      dateOfBirth: p.dateOfBirth || null,
+      createdAt: registration.createdAt || p.createdAt,
+      updatedAt: registration.updatedAt || p.updatedAt || new Date().toISOString(),
+      registrationId: registration.registrationId,
+      registrationNumber: registration.registrationNumber,
+    };
+
+    set((state) => {
+      const existingIndex = state.patients.findIndex((patient: any) =>
+        patient.registrationId === mappedPatient.registrationId ||
+        patient.patientId === mappedPatient.patientId
+      );
+
+      if (existingIndex >= 0) {
+        const patients = [...state.patients];
+        patients[existingIndex] = { ...patients[existingIndex], ...mappedPatient };
+        return { patients };
+      }
+
+      return { patients: [mappedPatient, ...state.patients] };
+    });
+  },
 
   fetchPatients: async () => {
     set({ loading: true, error: null });
