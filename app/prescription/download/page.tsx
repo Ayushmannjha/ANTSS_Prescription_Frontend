@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { FileDown, Calendar, CheckCircle2, AlertCircle, ShieldCheck, ArrowRight } from "lucide-react";
 import { qrCodeService } from "@services/qrCode.service";
 import QrExpirationMessage from "@/components/prescription/QrExpirationMessage";
+import PrescriptionView from "@/components/prescription/PrescriptionView";
 
 function DownloadContent() {
   const searchParams = useSearchParams();
@@ -122,113 +123,42 @@ function DownloadContent() {
     return <QrExpirationMessage clinicName="the Prescription Desk" clinicPhone="+91-1234-5678" />;
   }
 
-  // Valid / Download Screen
+  // Valid / Download Screen - Render the actual prescription view
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center p-6 text-white font-sans">
-      <div className="relative max-w-md w-full bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-[0_30px_60px_rgba(30,41,59,0.5)] overflow-hidden animate-fade-in">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
+      {/* Top Verification Banner */}
+      <div className="w-full bg-slate-900 text-white p-4 flex flex-col sm:flex-row items-center justify-between shadow-md print:hidden z-10 sticky top-0">
+        <div className="flex items-center gap-3 mb-4 sm:mb-0">
+          <ShieldCheck className="w-6 h-6 text-emerald-400" />
+          <div>
+            <h2 className="font-bold text-sm">Secure Prescription Link Verified</h2>
+            <p className="text-xs text-slate-400">Valid until {formattedExpiry}</p>
+          </div>
+        </div>
         
-        {/* Ambient background accent */}
-        <div className="absolute -top-32 -right-32 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Secure badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs font-semibold text-emerald-400 mb-6">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Link Verified & Secure
-        </div>
-
-        {/* Document Presentation */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="group relative w-24 h-24 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/10 mb-5 transition-transform duration-300 hover:scale-105">
-            <FileDown className="w-12 h-12 text-white group-hover:animate-bounce" />
-            {downloading && (
-              <span className="absolute -inset-1 rounded-2xl border-2 border-t-white border-r-transparent border-b-transparent border-l-transparent animate-spin" />
-            )}
-          </div>
-          <h2 className="text-2xl font-extrabold text-slate-100 mb-1">
-            Download Prescription
-          </h2>
-          <span className="text-sm font-semibold text-slate-400">
-            ID: #{prescriptionId}
-          </span>
-        </div>
-
-        {/* Expiry / Metadata Card */}
-        <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 mb-8 space-y-3">
-          <div className="flex items-center gap-3 text-sm">
-            <Calendar className="w-4 h-4 text-indigo-400 shrink-0" />
-            <div className="space-y-0.5">
-              <span className="block text-slate-400 text-xs font-medium uppercase tracking-wider">Link Valid Until</span>
-              <span className="font-semibold text-slate-200">{formattedExpiry}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Controls */}
-        <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:from-blue-700 active:to-indigo-700 disabled:opacity-50 text-white py-3.5 px-5 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 cursor-pointer disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
             {downloading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
-                Retrieving Document...
-              </>
+              <><span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> Generating File...</>
             ) : downloadComplete ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                Prescription Downloaded
-              </>
+              <><CheckCircle2 className="w-4 h-4 text-emerald-400" /> File Saved</>
             ) : (
-              <>
-                <FileDown className="w-4 h-4" />
-                Download PDF
-              </>
+              <><FileDown className="w-4 h-4" /> Download PDF Data</>
             )}
           </button>
-
-          {/* User Status / Auto-download helper */}
-          <div className="text-center">
-            {downloading ? (
-              <p className="text-xs text-blue-400 font-medium animate-pulse">
-                Generating secure document copy...
-              </p>
-            ) : downloadComplete ? (
-              <p className="text-xs text-emerald-400 font-semibold flex items-center justify-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> File saved. Check your device downloads.
-              </p>
-            ) : (
-              <p className="text-xs text-slate-400">
-                Your download should begin automatically. If it doesn't, click above.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Brand footer */}
-        <div className="mt-8 pt-4 border-t border-slate-800/60 text-[10px] text-slate-500 text-center tracking-wide font-medium">
-          Digital Prescription Delivery System • Confidential Healthcare Data
         </div>
       </div>
 
-      {/* Slide / Fade animation injection */}
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: scale(0.96) translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
+      {/* Render Actual Prescription Content */}
+      <div className="flex-1 w-full bg-slate-100">
+        {prescriptionId && (
+          <PrescriptionView prescriptionId={prescriptionId} />
+        )}
+      </div>
     </div>
   );
 }
