@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Printer } from "lucide-react";
+import { Loader2, Printer } from "lucide-react";
 import { usePatientForm, BaseTemplateProps } from "@/hooks/usePatientForm";
 
 import PatientPage from "../patient-form-fields/PatientPage";
@@ -26,14 +26,19 @@ export default function QuickOpdTemplate(props: BaseTemplateProps) {
         <button
           type="button"
           onClick={helpers.handlePrintPrescription}
+          disabled={helpers.isPrintingPrescription}
           aria-disabled={props.canPrint === false}
           className={`flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors shadow-sm text-sm font-medium ${
-            props.canPrint === false ? "cursor-not-allowed opacity-55" : ""
+            props.canPrint === false || helpers.isPrintingPrescription ? "cursor-not-allowed opacity-55" : ""
           }`}
           title={props.canPrint === false ? "Save changes before printing" : "Finish & Print"}
         >
-          <Printer className="w-4 h-4" />
-          Finish & Print
+          {helpers.isPrintingPrescription ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Printer className="w-4 h-4" />
+          )}
+          {helpers.isPrintingPrescription ? "Printing..." : "Finish & Print"}
         </button>
       </div>
 

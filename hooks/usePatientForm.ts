@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import React from "react";
+import React, { useState } from "react";
 import { VoiceMicField } from "../components/voice-mic-field";
 import {
   type MedicineEntry,
@@ -52,6 +52,7 @@ export function usePatientForm(props: BaseTemplateProps) {
     onPrintBlocked,
     printPrescriptionId,
   } = props;
+  const [printingPrescriptionId, setPrintingPrescriptionId] = useState<number | null>(null);
 
   const updateField = <K extends keyof PatientData>(
     field: K,
@@ -487,6 +488,7 @@ export function usePatientForm(props: BaseTemplateProps) {
     }
 
     try {
+      setPrintingPrescriptionId(prescriptionId);
       const pdf = await printHeadersService.getPrescriptionPdf(
         await resolvePrintHeaderId(),
         prescriptionId
@@ -495,6 +497,8 @@ export function usePatientForm(props: BaseTemplateProps) {
     } catch (error: any) {
       console.error("Failed to generate prescription PDF:", error);
       window.alert(error?.message || "Failed to generate prescription PDF. Please try again.");
+    } finally {
+      setPrintingPrescriptionId(null);
     }
   };
 
@@ -550,5 +554,7 @@ export function usePatientForm(props: BaseTemplateProps) {
     wrapWithMic,
     handlePrintPrescription,
     handlePrintPrescriptionById,
+    isPrintingPrescription: printingPrescriptionId !== null,
+    printingPrescriptionId,
   };
 }

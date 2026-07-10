@@ -9,6 +9,7 @@ import {
   FileText,
   CheckCircle,
   AlertTriangle,
+  Loader2,
   Printer,
   Download,
   Edit,
@@ -63,6 +64,7 @@ export default function PatientProfilePage() {
   const [allPatients, setAllPatients] = useState<any[]>([]);
 
   const [previewPrescription, setPreviewPrescription] = useState<any | null>(null);
+  const [printingPrescriptionId, setPrintingPrescriptionId] = useState<number | null>(null);
 
   const [consultationSearch, setConsultationSearch] = useState("");
   const [consultationFilterDoctor, setConsultationFilterDoctor] = useState("all");
@@ -333,6 +335,7 @@ export default function PatientProfilePage() {
 
   const openPrescriptionPdf = async (prescriptionId: number) => {
     try {
+      setPrintingPrescriptionId(prescriptionId);
       const pdf = await printHeadersService.getPrescriptionPdf(
         await resolvePrintHeaderId(),
         prescriptionId
@@ -354,6 +357,8 @@ export default function PatientProfilePage() {
     } catch (error: any) {
       console.error("Failed to open prescription PDF:", error);
       window.alert(error?.message || "Failed to generate prescription PDF. Please try again.");
+    } finally {
+      setPrintingPrescriptionId(null);
     }
   };
 
@@ -787,10 +792,15 @@ export default function PatientProfilePage() {
                                         variant="outline"
                                         size="sm"
                                         className="h-8 text-xs gap-1"
+                                        disabled={printingPrescriptionId === item.prescriptionId}
                                         onClick={() => openPrescriptionPdf(item.prescriptionId)}
                                       >
-                                        <Printer className="h-3.5 w-3.5" />
-                                        Print
+                                        {printingPrescriptionId === item.prescriptionId ? (
+                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                          <Printer className="h-3.5 w-3.5" />
+                                        )}
+                                        {printingPrescriptionId === item.prescriptionId ? "Printing..." : "Print"}
                                       </Button>
                                       <Button
                                         variant="outline"
@@ -1066,10 +1076,16 @@ export default function PatientProfilePage() {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={printingPrescriptionId === latestPrescription.prescriptionId}
                       onClick={() => openPrescriptionPdf(latestPrescription.prescriptionId)}
                       className="text-xs gap-1 px-1"
                     >
-                      <Printer className="h-3 w-3" /> Print
+                      {printingPrescriptionId === latestPrescription.prescriptionId ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Printer className="h-3 w-3" />
+                      )}
+                      {printingPrescriptionId === latestPrescription.prescriptionId ? "Printing" : "Print"}
                     </Button>
                     <Button
                       size="sm"
@@ -1082,10 +1098,16 @@ export default function PatientProfilePage() {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={printingPrescriptionId === latestPrescription.prescriptionId}
                       onClick={() => openPrescriptionPdf(latestPrescription.prescriptionId)}
                       className="text-xs gap-1 px-1"
                     >
-                      <Download className="h-3 w-3" /> PDF
+                      {printingPrescriptionId === latestPrescription.prescriptionId ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Download className="h-3 w-3" />
+                      )}
+                      {printingPrescriptionId === latestPrescription.prescriptionId ? "Printing" : "PDF"}
                     </Button>
                   </div>
                 </CardContent>
@@ -1199,10 +1221,15 @@ export default function PatientProfilePage() {
                   variant="secondary"
                   size="sm"
                   className="gap-1.5"
+                  disabled={printingPrescriptionId === previewPrescription.prescriptionId}
                   onClick={() => openPrescriptionPdf(previewPrescription.prescriptionId)}
                 >
-                  <Printer className="h-3.5 w-3.5" />
-                  Print
+                  {printingPrescriptionId === previewPrescription.prescriptionId ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Printer className="h-3.5 w-3.5" />
+                  )}
+                  {printingPrescriptionId === previewPrescription.prescriptionId ? "Printing..." : "Print"}
                 </Button>
                 <Button
                   variant="ghost"

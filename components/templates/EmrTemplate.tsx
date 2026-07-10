@@ -19,6 +19,7 @@ import {
   Users,
   Clock3,
   Eye,
+  Loader2,
   Printer,
   Sparkles,
   ChevronRight,
@@ -581,6 +582,7 @@ export default function EmrTemplate(props: BaseTemplateProps) {
         id="print-prescription-action"
         type="button"
         onClick={helpers.handlePrintPrescription}
+        disabled={helpers.isPrintingPrescription}
         aria-hidden="true"
         tabIndex={-1}
         className="hidden"
@@ -618,13 +620,20 @@ export default function EmrTemplate(props: BaseTemplateProps) {
                 <Button
                   type="button"
                   size="sm"
+                  disabled={helpers.printingPrescriptionId === selectedVisit.prescriptionId}
                   className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
                   onClick={() =>
                     helpers.handlePrintPrescriptionById(selectedVisit.prescriptionId)
                   }
                 >
-                  <Printer className="h-4 w-4" />
-                  Print Prescription
+                  {helpers.printingPrescriptionId === selectedVisit.prescriptionId ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Printer className="h-4 w-4" />
+                  )}
+                  {helpers.printingPrescriptionId === selectedVisit.prescriptionId
+                    ? "Printing..."
+                    : "Print Prescription"}
                 </Button>
               )}
             </div>
