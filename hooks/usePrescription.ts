@@ -41,7 +41,7 @@ function validatePrescriptionResponse(data: any): data is ApiDetailedPrescriptio
   return true;
 }
 
-export function usePrescription(prescriptionId: number | null) {
+export function usePrescription(prescriptionId: number | null, publicAccess = false) {
   const [prescription, setPrescription] = useState<MappedPrescription | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,9 @@ export function usePrescription(prescriptionId: number | null) {
     setError(null);
     try {
       // 1. Fetch prescription details from backend API
-      const rawPrescription = await prescriptionApi.getDetailedPrescription(id);
+      const rawPrescription = publicAccess
+        ? await prescriptionApi.getPublicDetailedPrescription(id)
+        : await prescriptionApi.getDetailedPrescription(id);
       
       // Validate response structure
       if (!validatePrescriptionResponse(rawPrescription)) {
@@ -396,17 +398,23 @@ export function usePrescription(prescriptionId: number | null) {
       setPrescription(mappedPrescription);
     } catch (e: any) {
       console.error("Error loading prescription details:", e);
-      setError(e.message || "Failed to load prescription details from server.");
+      if (publicAccess && (e?.response?.status === 403 || e?.status === 403 || e?.response?.status === 404 || e?.status === 404)) {
+        setError(
+          "This QR link needs a public prescription API endpoint. Please ask the backend team to allow public/shared access for this prescription QR URL."
+        );
+      } else {
+        setError(e.message || "Failed to load prescription details from server.");
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [publicAccess]);
 
   useEffect(() => {
     if (prescriptionId !== null) {
       fetchPrescriptionData(prescriptionId);
     }
-  }, [prescriptionId, fetchPrescriptionData]);
+  }, [prescriptionId, publicAccess, fetchPrescriptionData]);
 
   const refresh = useCallback(() => {
     if (prescriptionId !== null) {

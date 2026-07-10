@@ -13,6 +13,8 @@ import {
   type PatientData,
 } from "../components/patient-form-fields/types";
 import { MedicineMaster } from "@/src/services/medicine.service";
+import { printHeadersService, type PrintHeader } from "@/src/services/printHeaders.service";
+import { tokenService } from "@/src/modules/auth/services/token.service";
 import { VoiceContext } from "./useConsultationVoice";
 
 export type PatientMicControls = {
@@ -31,7 +33,7 @@ export interface BaseTemplateProps {
   registerFieldRef?: (fieldName: string, element: HTMLElement | null) => void;
   prescriptionHistoryNode?: React.ReactNode;
   prescriptionHistoryLength?: number;
-  visitHistory?: Array<{
+  visitHistory?: Array<Record<string, any> & {
     prescriptionId: number;
     createdAt?: string;
   }>;
@@ -415,8 +417,88 @@ export function usePatientForm(props: BaseTemplateProps) {
     });
   };
 
+  const getHeaderId = (header: PrintHeader): number | null => {
+    const value = Number(header.headerId ?? header.id);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  };
+
+  const sortHeadersByNewest = (headers: PrintHeader[]) => {
+    return [...headers].sort((a, b) => {
+      const aTime = Date.parse(a.updatedAt || a.createdAt || "");
+      const bTime = Date.parse(b.updatedAt || b.createdAt || "");
+      return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+    });
+  };
+
+  const getPrintHeaderLookupCandidates = () => {
+    const user = tokenService.getUser() as any;
+    const candidates: Array<{ entityId?: number; entityType?: string }> = [];
+
+    const addCandidate = (entityId: unknown, entityType: string) => {
+      const numericEntityId = Number(entityId);
+      if (Number.isFinite(numericEntityId) && numericEntityId > 0) {
+        candidates.push({ entityId: numericEntityId, entityType });
+      }
+    };
+
+    addCandidate(user?.doctorId, "DOCTOR");
+    addCandidate(user?.clinicId, "CLINIC");
+    addCandidate(user?.hospitalId, "HOSPITAL");
+    candidates.push({});
+
+    return candidates;
+  };
+
+  const resolvePrintHeaderId = async (): Promise<number> => {
+    for (const params of getPrintHeaderLookupCandidates()) {
+      const headers = sortHeadersByNewest(await printHeadersService.getHeaders(params));
+      const headerId = headers.map(getHeaderId).find((id): id is number => Boolean(id));
+
+      if (headerId) {
+        return headerId;
+      }
+    }
+
+    return 0;
+  };
+
+  const openPdfBlob = (blob: Blob, prescriptionId: number) => {
+    const pdfBlob = blob.type === "application/pdf" ? blob : new Blob([blob], { type: "application/pdf" });
+    const url = URL.createObjectURL(pdfBlob);
+    const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
+
+    if (!openedWindow) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `prescription-${prescriptionId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
+
   /* ---------- print handler ---------- */
-  const handlePrintPrescription = () => {
+  const handlePrintPrescriptionById = async (prescriptionId: number) => {
+    if (!Number.isFinite(prescriptionId) || prescriptionId <= 0) {
+      onPrintBlocked?.();
+      return;
+    }
+
+    try {
+      const pdf = await printHeadersService.getPrescriptionPdf(
+        await resolvePrintHeaderId(),
+        prescriptionId
+      );
+      openPdfBlob(pdf, prescriptionId);
+    } catch (error: any) {
+      console.error("Failed to generate prescription PDF:", error);
+      window.alert(error?.message || "Failed to generate prescription PDF. Please try again.");
+    }
+  };
+
+  const handlePrintPrescription = async () => {
     if (!canPrint) {
       onPrintBlocked?.();
       return;
@@ -430,12 +512,7 @@ export function usePatientForm(props: BaseTemplateProps) {
       console.error("Failed to save prescription data:", e);
     }
 
-    if (!Number.isFinite(savedPrescriptionId) || savedPrescriptionId <= 0) {
-      onPrintBlocked?.();
-      return;
-    }
-
-    window.open(`/prescription?id=${savedPrescriptionId}`, "_blank");
+    await handlePrintPrescriptionById(savedPrescriptionId);
   };
 
   return {
@@ -472,5 +549,6 @@ export function usePatientForm(props: BaseTemplateProps) {
     removeDocument,
     wrapWithMic,
     handlePrintPrescription,
+    handlePrintPrescriptionById,
   };
 }

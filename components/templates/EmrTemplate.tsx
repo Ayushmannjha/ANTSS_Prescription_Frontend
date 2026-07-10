@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import {
   Activity,
   CalendarDays,
@@ -19,11 +19,13 @@ import {
   Users,
   Clock3,
   Eye,
+  Printer,
   Sparkles,
   ChevronRight,
   Compass,
 } from "lucide-react";
 import { usePatientForm, BaseTemplateProps } from "@/hooks/usePatientForm";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -61,10 +63,10 @@ export default function EmrTemplate(props: BaseTemplateProps) {
   const [documentsPreviewOpen, setDocumentsPreviewOpen] = useState(false);
   const [labReportsPreviewOpen, setLabReportsPreviewOpen] = useState(false);
 
-  const [selectedVisit, setSelectedVisit] = useState<{
+  const [selectedVisit, setSelectedVisit] = useState<(Record<string, any> & {
     prescriptionId: number;
     createdAt?: string;
-  } | null>(null);
+  }) | null>(null);
 
   const savedInvestigationCount = (data.investigations || []).filter((inv) =>
     [inv.test, inv.value, inv.notes, inv.documentUrl, inv.documentFileName].some(
@@ -105,6 +107,39 @@ export default function EmrTemplate(props: BaseTemplateProps) {
       year: "numeric",
     });
   };
+
+  const formatDetailDateTime = (date?: string) => {
+    if (!date) return "N/A";
+
+    return new Date(date).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const DetailSection = ({
+    title,
+    children,
+  }: {
+    title: string;
+    children: ReactNode;
+  }) => (
+    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+        {title}
+      </h4>
+      {children}
+    </section>
+  );
+
+  const EmptyDetail = ({ children }: { children: ReactNode }) => (
+    <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
+      {children}
+    </p>
+  );
 
   return (
     <div className="emr-workspace w-full pb-14">
@@ -557,36 +592,297 @@ export default function EmrTemplate(props: BaseTemplateProps) {
       >
         <DialogContent className="flex h-[94vh] max-h-[94vh] !w-[calc(100vw-3rem)] !max-w-[1200px] flex-col gap-0 overflow-hidden border-slate-200 bg-slate-100 p-0">
           <DialogHeader className="shrink-0 border-b border-slate-200 bg-white px-5 py-4 pr-14">
-            <DialogTitle className="flex items-center gap-2 text-base text-slate-900">
-              <CalendarDays className="h-4 w-4 text-primary" />
-              Prescription details
-            </DialogTitle>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <DialogTitle className="flex items-center gap-2 text-base text-slate-900">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  Prescription details
+                </DialogTitle>
 
-            <DialogDescription className="text-xs">
-              {selectedVisit?.createdAt
-                ? new Date(selectedVisit.createdAt).toLocaleDateString(
-                    "en-IN",
-                    {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    }
-                  )
-                : "Selected visit"}
-              {" · Read only"}
-            </DialogDescription>
+                <DialogDescription className="mt-1 text-xs">
+                  {selectedVisit?.createdAt
+                    ? new Date(selectedVisit.createdAt).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )
+                    : "Selected visit"}
+                  {" · Read only"}
+                </DialogDescription>
+              </div>
+
+              {selectedVisit && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={() =>
+                    helpers.handlePrintPrescriptionById(selectedVisit.prescriptionId)
+                  }
+                >
+                  <Printer className="h-4 w-4" />
+                  Print Prescription
+                </Button>
+              )}
+            </div>
           </DialogHeader>
 
-          {selectedVisit && (
-            <iframe
-              key={selectedVisit.prescriptionId}
-              src={`/prescription?id=${selectedVisit.prescriptionId}`}
-              title={`Prescription from ${
-                selectedVisit.createdAt || selectedVisit.prescriptionId
-              }`}
-              className="min-h-0 w-full flex-1 border-0 bg-slate-100"
-            />
-          )}
+          {selectedVisit && (() => {
+            const visit = selectedVisit;
+            const c = visit.consultation || {};
+            const complaints = c.complaints?.length
+              ? c.complaints
+              : c.complaintName
+              ? [c]
+              : [];
+            const diagnoses = c.diagnoses?.length
+              ? c.diagnoses
+              : c.diagnosisName
+              ? [c]
+              : [];
+            const histories = c.pastMedicalHistories?.length
+              ? c.pastMedicalHistories
+              : c.medicalHistory || c.allergies || c.currentMedicine
+              ? [c]
+              : [];
+            const vitals = [
+              c.height ? ["Height", `${c.height} cm`] : null,
+              c.weight ? ["Weight", `${c.weight} kg`] : null,
+              c.temperature ? ["Temperature", `${c.temperature} °F`] : null,
+              c.pulse ? ["Pulse", `${c.pulse} bpm`] : null,
+              c.spo2 ? ["SpO2", `${c.spo2}%`] : null,
+              c.bp ? ["BP", c.bp] : null,
+              c.respiratoryRate ? ["Resp. Rate", `${c.respiratoryRate}`] : null,
+            ].filter(Boolean) as string[][];
+            const tests = [
+              ...(visit.investigations || []),
+              ...(visit.diagnostics || []),
+              ...(visit.testRequested || []),
+            ];
+
+            return (
+              <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-5">
+                <div className="mx-auto max-w-5xl space-y-4 text-slate-900">
+                  <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                          Patient
+                        </p>
+                        <p className="mt-1 text-sm font-bold">
+                          {c.patientName || data.name || "Patient"}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {[c.gender || data.gender, c.age || data.age ? `${c.age || data.age} yrs` : null]
+                            .filter(Boolean)
+                            .join(" • ") || "N/A"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          ID: {c.patientId || data.patientId || "N/A"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                          Doctor
+                        </p>
+                        <p className="mt-1 text-sm font-bold">{c.doctorName || "N/A"}</p>
+                        <p className="text-sm text-slate-600">
+                          {[c.qualification, c.specialization, c.doctorCode]
+                            .filter(Boolean)
+                            .join(" • ") || "N/A"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                          Visit
+                        </p>
+                        <p className="mt-1 text-sm font-bold">
+                          {formatDetailDateTime(visit.createdAt)}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          Prescription #{visit.prescriptionId}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Follow-up: {c.followUpDate ? formatVisitDate(c.followUpDate) : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <DetailSection title="Vitals">
+                    {vitals.length ? (
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        {vitals.map(([label, value]) => (
+                          <div key={label} className="rounded-lg bg-slate-50 px-3 py-2">
+                            <p className="text-[11px] font-bold uppercase text-slate-500">
+                              {label}
+                            </p>
+                            <p className="text-sm font-semibold">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <EmptyDetail>No vitals recorded.</EmptyDetail>
+                    )}
+                  </DetailSection>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <DetailSection title="Chief Complaints">
+                      {complaints.length ? (
+                        <ul className="space-y-2 text-sm">
+                          {complaints.map((item: any, index: number) => (
+                            <li key={index} className="rounded-lg bg-slate-50 px-3 py-2">
+                              <span className="font-semibold">{item.complaintName}</span>
+                              <span className="text-slate-600">
+                                {" "}
+                                {[item.complaintFrequency, item.severity, item.complaintDuration]
+                                  .filter(Boolean)
+                                  .join(" • ")}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <EmptyDetail>No complaints recorded.</EmptyDetail>
+                      )}
+                    </DetailSection>
+
+                    <DetailSection title="Clinical Findings">
+                      {c.generalExaminations?.length ? (
+                        <ul className="space-y-2 text-sm">
+                          {c.generalExaminations.map((item: string, index: number) => (
+                            <li key={index} className="rounded-lg bg-slate-50 px-3 py-2">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <EmptyDetail>No clinical findings recorded.</EmptyDetail>
+                      )}
+                    </DetailSection>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <DetailSection title="Past History">
+                      {histories.length ? (
+                        <ul className="space-y-2 text-sm">
+                          {histories.map((item: any, index: number) => (
+                            <li key={index} className="rounded-lg bg-slate-50 px-3 py-2">
+                              {item.allergies && <p>Allergies: {item.allergies}</p>}
+                              {item.currentMedicine && <p>Current medicine: {item.currentMedicine}</p>}
+                              {item.medicalHistory && <p>Medical history: {item.medicalHistory}</p>}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <EmptyDetail>No past history recorded.</EmptyDetail>
+                      )}
+                    </DetailSection>
+
+                    <DetailSection title="Diagnosis">
+                      {diagnoses.length ? (
+                        <ul className="space-y-2 text-sm">
+                          {diagnoses.map((item: any, index: number) => (
+                            <li key={index} className="rounded-lg bg-slate-50 px-3 py-2">
+                              <span className="font-semibold">{item.diagnosisName}</span>
+                              <span className="text-slate-600">
+                                {" "}
+                                {[item.diagnosisCode, item.diagnosisDuration]
+                                  .filter(Boolean)
+                                  .join(" • ")}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <EmptyDetail>No diagnosis recorded.</EmptyDetail>
+                      )}
+                    </DetailSection>
+                  </div>
+
+                  <DetailSection title="Medicines">
+                    {visit.medicines?.length ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                          <thead className="border-b text-xs uppercase text-slate-500">
+                            <tr>
+                              <th className="py-2 pr-3">Medicine</th>
+                              <th className="py-2 pr-3">Dose</th>
+                              <th className="py-2 pr-3">Frequency</th>
+                              <th className="py-2 pr-3">Duration</th>
+                              <th className="py-2 pr-3">Instructions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {visit.medicines.map((medicine: any, index: number) => (
+                              <tr
+                                key={medicine.prescriptionMedicineId || index}
+                                className="border-b last:border-0"
+                              >
+                                <td className="py-2 pr-3 font-semibold">
+                                  {medicine.medicineName || "N/A"}
+                                </td>
+                                <td className="py-2 pr-3">
+                                  {medicine.dosage || medicine.strength || "N/A"}
+                                </td>
+                                <td className="py-2 pr-3">{medicine.frequency || "N/A"}</td>
+                                <td className="py-2 pr-3">{medicine.duration || "N/A"}</td>
+                                <td className="py-2 pr-3">{medicine.instruction || "N/A"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <EmptyDetail>No medicines recorded.</EmptyDetail>
+                    )}
+                  </DetailSection>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <DetailSection title="Investigations / Tests">
+                      {tests.length ? (
+                        <ul className="space-y-2 text-sm">
+                          {tests.map((item: any, index: number) => (
+                            <li key={index} className="rounded-lg bg-slate-50 px-3 py-2">
+                              {item.investigationName ||
+                                item.testName ||
+                                item.diagnosticName ||
+                                "Investigation"}
+                              {item.notes ? (
+                                <span className="text-slate-600"> • {item.notes}</span>
+                              ) : null}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <EmptyDetail>No investigations or tests recorded.</EmptyDetail>
+                      )}
+                    </DetailSection>
+
+                    <DetailSection title="Advice / Notes">
+                      {c.advice || visit.notes ? (
+                        <div className="space-y-2 text-sm">
+                          {c.advice && (
+                            <p className="rounded-lg bg-slate-50 px-3 py-2">{c.advice}</p>
+                          )}
+                          {visit.notes && (
+                            <p className="rounded-lg bg-slate-50 px-3 py-2">{visit.notes}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <EmptyDetail>No advice or notes recorded.</EmptyDetail>
+                      )}
+                    </DetailSection>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>

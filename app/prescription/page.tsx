@@ -10,6 +10,7 @@ import { prescriptionApi } from "@/services/api";
 function PrescriptionContent() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
+  const publicAccess = searchParams.get("public") === "1";
   const [localPrescription, setLocalPrescription] = useState<MappedPrescription | null>(null);
   const [checkedLocalPrescription, setCheckedLocalPrescription] = useState(Boolean(idParam));
 
@@ -146,7 +147,7 @@ function PrescriptionContent() {
       );
     }
 
-    return <PrescriptionView prescriptionId={prescriptionId} />;
+    return <PrescriptionView prescriptionId={prescriptionId} publicAccess={publicAccess} />;
   }
 
   // Fallback to local storage (for unsaved patient form prints)

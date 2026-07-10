@@ -3,9 +3,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Calendar,
   User,
-  Clock,
   Activity,
   Search,
   FileText,
@@ -16,9 +14,6 @@ import {
   Edit,
   Plus,
   History,
-  TrendingUp,
-  Heart,
-  Thermometer,
   ShieldAlert,
 } from "lucide-react";
 
@@ -29,7 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { patientService } from "@/src/services/patient.service";
 import { prescriptionService } from "@/src/services/prescription.service";
-import PrescriptionView from "../../prescription/components/PrescriptionView";
+import { printHeadersService, type PrintHeader } from "@/src/services/printHeaders.service";
+import { tokenService } from "@/src/modules/auth/services/token.service";
 import { useAuthStore } from "@/src/store/authStore";
 
 interface RegistrationInfo {
@@ -293,73 +289,92 @@ export default function PatientProfilePage() {
     return history.slice(startIndex, startIndex + itemsPerPage);
   }, [history, prescriptionPage]);
 
-  const mapPrescriptionForPrint = (detPres: any) => {
-    if (!detPres) return null;
-    const c = detPres.consultation || {};
-    return {
-      clinic: {
-        name: "Avismita Health Center",
-        address: "Avismita Tech Park, Bangalore, KA, India",
-        phone: "+91 80 4392 0192",
-      },
-      doctor: {
-        name: c.doctorName || "Dr. Rajesh Kumar",
-        qualification: c.qualification || "MBBS, MD",
-        registrationNo: c.doctorCode || "REG-99382",
-        specialization: c.specialization || "General Medicine",
-      },
-      patient: {
-        name: patient?.patientName || c.patientName || "Patient",
-        age: patient?.age || c.age || 0,
-        gender: (patient?.gender || c.gender || "Male") as "Male" | "Female" | "Other",
-        visitDate: detPres.createdAt
-          ? new Date(detPres.createdAt).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : "N/A",
-        prescriptionId: `RX-${detPres.prescriptionId}`,
-      },
-      vitals: [
-        c.bp ? { label: "Blood Pressure", value: c.bp, unit: "mmHg", icon: <Heart className="w-4 h-4" /> } : null,
-        c.pulse ? { label: "Pulse", value: c.pulse, unit: "bpm", icon: <Activity className="w-4 h-4" /> } : null,
-        c.temperature
-          ? { label: "Temperature", value: c.temperature, unit: "°F", icon: <Thermometer className="w-4 h-4" /> }
-          : null,
-        c.spo2
-          ? { label: "SpO2", value: c.spo2, unit: "%", icon: <TrendingUp className="w-4 h-4" /> }
-          : null,
-        c.weight ? { label: "Weight", value: c.weight, unit: "kg", icon: <Activity className="w-4 h-4" /> } : null,
-        c.height ? { label: "Height", value: c.height, unit: "cm", icon: <Activity className="w-4 h-4" /> } : null,
-      ].filter(Boolean) as any[],
-      chiefComplaints: c.complaintName
-        ? [`${c.complaintName} (${[c.complaintFrequency, c.severity, c.complaintDuration].filter(Boolean).join(", ")})`]
-        : [],
-      pastHistory: [
-        c.medicalHistory ? `Medical History: ${c.medicalHistory}` : null,
-        c.currentMedicine ? `Current Medications: ${c.currentMedicine}` : null,
-      ].filter(Boolean) as string[],
-      allergies: c.allergies ? [c.allergies] : [],
-      diagnosis: c.diagnosisName || "Diagnosis Pending",
-      medicines: (detPres.medicines || []).map((m: any) => ({
-        id: String(m.prescriptionMedicineId),
-        genericName: m.medicineName || "Unknown",
-        brandName: m.medicineName,
-        dosage: m.dosage || m.strength || "---",
-        frequency: m.frequency || "---",
-        instructions: m.instruction || "As directed",
-        duration: m.duration || "---",
-      })),
-      diagnostics: [],
-      advice: c.advice ? c.advice.split("\n").filter(Boolean) : [],
-      followUp: c.followUpDate
-        ? {
-            days: 5,
-            note: `Follow-up on ${new Date(c.followUpDate).toLocaleDateString()}`,
-          }
-        : undefined,
+  const getPrintHeaderId = (header: PrintHeader): number | null => {
+    const value = Number(header.headerId ?? header.id);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  };
+
+  const getPrintHeaderLookupCandidates = () => {
+    const user = tokenService.getUser() as any;
+    const candidates: Array<{ entityId?: number; entityType?: string }> = [];
+
+    const addCandidate = (entityId: unknown, entityType: string) => {
+      const numericEntityId = Number(entityId);
+      if (Number.isFinite(numericEntityId) && numericEntityId > 0) {
+        candidates.push({ entityId: numericEntityId, entityType });
+      }
     };
+
+    addCandidate(user?.doctorId, "DOCTOR");
+    addCandidate(user?.clinicId, "CLINIC");
+    addCandidate(user?.hospitalId, "HOSPITAL");
+    candidates.push({});
+
+    return candidates;
+  };
+
+  const resolvePrintHeaderId = async () => {
+    for (const params of getPrintHeaderLookupCandidates()) {
+      const headers = await printHeadersService.getHeaders(params);
+      const headerId = headers
+        .sort((a, b) => {
+          const aTime = Date.parse(a.updatedAt || a.createdAt || "");
+          const bTime = Date.parse(b.updatedAt || b.createdAt || "");
+          return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+        })
+        .map(getPrintHeaderId)
+        .find((id): id is number => Boolean(id));
+
+      if (headerId) return headerId;
+    }
+
+    return 0;
+  };
+
+  const openPrescriptionPdf = async (prescriptionId: number) => {
+    try {
+      const pdf = await printHeadersService.getPrescriptionPdf(
+        await resolvePrintHeaderId(),
+        prescriptionId
+      );
+      const pdfBlob = pdf.type === "application/pdf" ? pdf : new Blob([pdf], { type: "application/pdf" });
+      const url = URL.createObjectURL(pdfBlob);
+      const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
+
+      if (!openedWindow) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `prescription-${prescriptionId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error: any) {
+      console.error("Failed to open prescription PDF:", error);
+      window.alert(error?.message || "Failed to generate prescription PDF. Please try again.");
+    }
+  };
+
+  const formatDateTime = (value?: string) => {
+    if (!value) return "N/A";
+    return new Date(value).toLocaleString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDate = (value?: string) => {
+    if (!value) return "N/A";
+    return new Date(value).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   const handleEditPrescription = (item: any) => {
@@ -772,7 +787,7 @@ export default function PatientProfilePage() {
                                         variant="outline"
                                         size="sm"
                                         className="h-8 text-xs gap-1"
-                                        onClick={() => setPreviewPrescription(item)}
+                                        onClick={() => openPrescriptionPdf(item.prescriptionId)}
                                       >
                                         <Printer className="h-3.5 w-3.5" />
                                         Print
@@ -1051,7 +1066,7 @@ export default function PatientProfilePage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setPreviewPrescription(latestPrescription)}
+                      onClick={() => openPrescriptionPdf(latestPrescription.prescriptionId)}
                       className="text-xs gap-1 px-1"
                     >
                       <Printer className="h-3 w-3" /> Print
@@ -1067,10 +1082,7 @@ export default function PatientProfilePage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        setPreviewPrescription(latestPrescription);
-                        setTimeout(() => window.print(), 500);
-                      }}
+                      onClick={() => openPrescriptionPdf(latestPrescription.prescriptionId)}
                       className="text-xs gap-1 px-1"
                     >
                       <Download className="h-3 w-3" /> PDF
@@ -1174,16 +1186,258 @@ export default function PatientProfilePage() {
 
       {previewPrescription && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 print:hidden overflow-y-auto animate-fade-in">
-          <div className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center flex-shrink-0">
-              <h3 className="font-bold">Detailed Prescription Preview</h3>
-              <Button variant="ghost" className="text-white hover:bg-white/10" onClick={() => setPreviewPrescription(null)}>
-                Close Preview
-              </Button>
+          <div className="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+            <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b bg-slate-950 px-6 py-4 text-white">
+              <div>
+                <h3 className="font-bold">Prescription Details</h3>
+                <p className="text-xs text-slate-300">
+                  RX-{previewPrescription.prescriptionId} • {formatDateTime(previewPrescription.createdAt)}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => openPrescriptionPdf(previewPrescription.prescriptionId)}
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  Print
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-white hover:bg-white/10 hover:text-white"
+                  onClick={() => setPreviewPrescription(null)}
+                >
+                  Close
+                </Button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
-              <PrescriptionView prescription={mapPrescriptionForPrint(previewPrescription) as any} />
+            <div className="flex-1 overflow-y-auto bg-slate-50 p-5">
+              {(() => {
+                const detail = previewPrescription;
+                const c = detail.consultation || {};
+                const complaints = c.complaints?.length
+                  ? c.complaints
+                  : c.complaintName
+                  ? [c]
+                  : [];
+                const diagnoses = c.diagnoses?.length
+                  ? c.diagnoses
+                  : c.diagnosisName
+                  ? [c]
+                  : [];
+                const histories = c.pastMedicalHistories?.length
+                  ? c.pastMedicalHistories
+                  : c.medicalHistory || c.allergies || c.currentMedicine
+                  ? [c]
+                  : [];
+                const vitals = [
+                  c.height ? ["Height", `${c.height} cm`] : null,
+                  c.weight ? ["Weight", `${c.weight} kg`] : null,
+                  c.temperature ? ["Temperature", `${c.temperature} °F`] : null,
+                  c.pulse ? ["Pulse", `${c.pulse} bpm`] : null,
+                  c.spo2 ? ["SpO2", `${c.spo2}%`] : null,
+                  c.bp ? ["BP", c.bp] : null,
+                  c.respiratoryRate ? ["Resp. Rate", String(c.respiratoryRate)] : null,
+                ].filter(Boolean) as string[][];
+
+                const Section = ({
+                  title,
+                  children,
+                }: {
+                  title: string;
+                  children: React.ReactNode;
+                }) => (
+                  <section className="rounded-lg border bg-white p-4 shadow-sm">
+                    <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">{title}</h4>
+                    {children}
+                  </section>
+                );
+
+                const Empty = ({ label }: { label: string }) => (
+                  <p className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-500">{label}</p>
+                );
+
+                return (
+                  <div className="space-y-4 text-slate-900">
+                    <section className="rounded-lg border bg-white p-4 shadow-sm">
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Patient</p>
+                          <p className="mt-1 font-semibold">{patient?.patientName || c.patientName || "Patient"}</p>
+                          <p className="text-sm text-slate-600">
+                            {[patient?.gender || c.gender, patient?.age || c.age ? `${patient?.age || c.age} yrs` : null]
+                              .filter(Boolean)
+                              .join(" • ") || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Doctor</p>
+                          <p className="mt-1 font-semibold">{c.doctorName || "N/A"}</p>
+                          <p className="text-sm text-slate-600">
+                            {[c.qualification, c.specialization, c.doctorCode].filter(Boolean).join(" • ") || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Visit</p>
+                          <p className="mt-1 font-semibold">{formatDateTime(detail.createdAt)}</p>
+                          <p className="text-sm text-slate-600">Follow-up: {formatDate(c.followUpDate)}</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <Section title="Vitals">
+                      {vitals.length ? (
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                          {vitals.map(([label, value]) => (
+                            <div key={label} className="rounded-md bg-slate-50 px-3 py-2">
+                              <p className="text-[11px] font-semibold uppercase text-slate-500">{label}</p>
+                              <p className="text-sm font-semibold">{value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <Empty label="No vitals recorded." />
+                      )}
+                    </Section>
+
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <Section title="Chief Complaints">
+                        {complaints.length ? (
+                          <ul className="space-y-2 text-sm">
+                            {complaints.map((item: any, index: number) => (
+                              <li key={index} className="rounded-md bg-slate-50 px-3 py-2">
+                                <span className="font-medium">{item.complaintName}</span>
+                                <span className="text-slate-600">
+                                  {" "}
+                                  {[item.complaintFrequency, item.severity, item.complaintDuration]
+                                    .filter(Boolean)
+                                    .join(" • ")}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <Empty label="No complaints recorded." />
+                        )}
+                      </Section>
+
+                      <Section title="Clinical Findings">
+                        {c.generalExaminations?.length ? (
+                          <ul className="space-y-2 text-sm">
+                            {c.generalExaminations.map((item: string, index: number) => (
+                              <li key={index} className="rounded-md bg-slate-50 px-3 py-2">
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <Empty label="No clinical findings recorded." />
+                        )}
+                      </Section>
+                    </div>
+
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <Section title="Past History">
+                        {histories.length ? (
+                          <ul className="space-y-2 text-sm">
+                            {histories.map((item: any, index: number) => (
+                              <li key={index} className="rounded-md bg-slate-50 px-3 py-2">
+                                {item.allergies && <p>Allergies: {item.allergies}</p>}
+                                {item.currentMedicine && <p>Current medicine: {item.currentMedicine}</p>}
+                                {item.medicalHistory && <p>Medical history: {item.medicalHistory}</p>}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <Empty label="No past history recorded." />
+                        )}
+                      </Section>
+
+                      <Section title="Diagnosis">
+                        {diagnoses.length ? (
+                          <ul className="space-y-2 text-sm">
+                            {diagnoses.map((item: any, index: number) => (
+                              <li key={index} className="rounded-md bg-slate-50 px-3 py-2">
+                                <span className="font-medium">{item.diagnosisName}</span>
+                                <span className="text-slate-600">
+                                  {" "}
+                                  {[item.diagnosisCode, item.diagnosisDuration].filter(Boolean).join(" • ")}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <Empty label="No diagnosis recorded." />
+                        )}
+                      </Section>
+                    </div>
+
+                    <Section title="Medicines">
+                      {detail.medicines?.length ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-sm">
+                            <thead className="border-b text-xs uppercase text-slate-500">
+                              <tr>
+                                <th className="py-2 pr-3">Medicine</th>
+                                <th className="py-2 pr-3">Dose</th>
+                                <th className="py-2 pr-3">Frequency</th>
+                                <th className="py-2 pr-3">Duration</th>
+                                <th className="py-2 pr-3">Instructions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detail.medicines.map((med: any, index: number) => (
+                                <tr key={med.prescriptionMedicineId || index} className="border-b last:border-0">
+                                  <td className="py-2 pr-3 font-medium">{med.medicineName || "N/A"}</td>
+                                  <td className="py-2 pr-3">{med.dosage || med.strength || "N/A"}</td>
+                                  <td className="py-2 pr-3">{med.frequency || "N/A"}</td>
+                                  <td className="py-2 pr-3">{med.duration || "N/A"}</td>
+                                  <td className="py-2 pr-3">{med.instruction || "N/A"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <Empty label="No medicines recorded." />
+                      )}
+                    </Section>
+
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <Section title="Investigations / Tests">
+                        {detail.investigations?.length || detail.diagnostics?.length || detail.testRequested?.length ? (
+                          <ul className="space-y-2 text-sm">
+                            {[...(detail.investigations || []), ...(detail.diagnostics || []), ...(detail.testRequested || [])].map(
+                              (item: any, index: number) => (
+                                <li key={index} className="rounded-md bg-slate-50 px-3 py-2">
+                                  {item.investigationName || item.testName || item.diagnosticName || "Investigation"}
+                                  {item.notes ? <span className="text-slate-600"> • {item.notes}</span> : null}
+                                </li>
+                              )
+                            )}
+                          </ul>
+                        ) : (
+                          <Empty label="No investigations or tests recorded." />
+                        )}
+                      </Section>
+
+                      <Section title="Advice / Notes">
+                        {c.advice || detail.notes ? (
+                          <div className="space-y-2 text-sm">
+                            {c.advice && <p className="rounded-md bg-slate-50 px-3 py-2">{c.advice}</p>}
+                            {detail.notes && <p className="rounded-md bg-slate-50 px-3 py-2">{detail.notes}</p>}
+                          </div>
+                        ) : (
+                          <Empty label="No advice or notes recorded." />
+                        )}
+                      </Section>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

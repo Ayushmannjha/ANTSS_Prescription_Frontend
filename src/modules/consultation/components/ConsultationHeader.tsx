@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { type ChangeEvent, ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,8 +12,12 @@ import {
   Sun,
   Moon,
   Palette,
+  Upload,
 } from "lucide-react";
+import { toast } from "sonner";
 import { TemplateSelector, TemplateId } from "@/components/TemplateSelector";
+import { tokenService } from "@/src/modules/auth/services/token.service";
+import { printHeadersService } from "@/src/services/printHeaders.service";
 
 export type ConsultationTheme = "light" | "dark" | "colourful";
 
@@ -53,6 +57,7 @@ export function ConsultationHeader({
   assistantNode,
 }: ConsultationHeaderProps) {
   const [template, setTemplate] = useState<TemplateId>("EMR");
+  const [isUploadingHeader, setIsUploadingHeader] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(
@@ -74,6 +79,51 @@ export function ConsultationHeader({
 
   const handleThemeSelect = (newTheme: ConsultationTheme) => {
     onThemeChange(newTheme);
+  };
+
+  const getPrintHeaderEntity = () => {
+    const user = tokenService.getUser() as any;
+    const candidates = [
+      { entityId: user?.doctorId, entityType: "DOCTOR" },
+      { entityId: user?.clinicId, entityType: "CLINIC" },
+      { entityId: user?.hospitalId, entityType: "HOSPITAL" },
+    ];
+
+    for (const candidate of candidates) {
+      const entityId = Number(candidate.entityId);
+      if (Number.isFinite(entityId) && entityId > 0) {
+        return { entityId, entityType: candidate.entityType };
+      }
+    }
+
+    return null;
+  };
+
+  const handlePrintHeaderUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const image = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!image) return;
+
+    const entity = getPrintHeaderEntity();
+    if (!entity) {
+      window.alert("Could not resolve your doctor, clinic, or hospital id for print header upload.");
+      return;
+    }
+
+    try {
+      setIsUploadingHeader(true);
+      await printHeadersService.uploadHeader({
+        ...entity,
+        image,
+      });
+      toast.success("Print header uploaded successfully.");
+    } catch (error: any) {
+      console.error("Failed to upload print header:", error);
+      toast.error(error?.message || "Failed to upload print header. Please try again.");
+    } finally {
+      setIsUploadingHeader(false);
+    }
   };
 
   return (
@@ -154,7 +204,30 @@ export function ConsultationHeader({
           />
 
           <div className="hidden items-center gap-1 md:flex">
-            
+            <input
+              id="print-header-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePrintHeaderUpload}
+              disabled={isUploadingHeader}
+            />
+
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              aria-disabled={isUploadingHeader}
+              title="Upload print header"
+              className={`h-8 gap-1.5 text-xs text-slate-500 hover:bg-red-50 hover:text-red-600 ${
+                isUploadingHeader ? "pointer-events-none opacity-45" : ""
+              }`}
+            >
+              <label htmlFor="print-header-upload">
+                <Upload className="h-3.5 w-3.5" />
+                {isUploadingHeader ? "Uploading" : "Header"}
+              </label>
+            </Button>
 
             <Button
               variant="ghost"

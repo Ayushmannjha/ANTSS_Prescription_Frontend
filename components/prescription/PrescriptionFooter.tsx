@@ -13,7 +13,7 @@ export const PrescriptionFooter: React.FC<PrescriptionFooterProps> = ({ doctor, 
   // depends on browser localStorage and will not work when scanned from another device.
   const prescriptionUrl =
     typeof window !== "undefined" && Number.isFinite(validPrescriptionId) && validPrescriptionId > 0
-      ? `${window.location.origin}/prescription?id=${validPrescriptionId}&expires=${Date.now() + 30 * 60 * 1000}`
+      ? `${window.location.origin}/public/prescription/${validPrescriptionId}?expires=${Date.now() + 30 * 60 * 1000}`
       : "";
 
   return (

@@ -1,4 +1,5 @@
-import { apiClient } from "@/src/services/axios";
+import axios from "axios";
+import { API_BASE_URL, apiClient } from "@/src/services/axios";
 import { 
   ApiDetailedPrescriptionResponse, 
   ApiDoctorResponse, 
@@ -13,6 +14,33 @@ export const prescriptionApi = {
    */
   getDetailedPrescription: async (id: number): Promise<ApiDetailedPrescriptionResponse> => {
     return apiClient.get<ApiDetailedPrescriptionResponse>(`/api/prescription/detail/${id}`);
+  },
+
+  /**
+   * Fetches a QR/share prescription without requiring the viewer to be logged in.
+   * Backend must expose one of these public routes for scanned QR links to work.
+   */
+  getPublicDetailedPrescription: async (id: number): Promise<ApiDetailedPrescriptionResponse> => {
+    const publicPaths = [
+      `/api/prescription/public/${id}`,
+      `/api/prescription/public/detail/${id}`,
+      `/api/public/prescription/${id}`,
+      `/api/public/prescription/detail/${id}`,
+    ];
+
+    let lastError: unknown = null;
+    for (const path of publicPaths) {
+      try {
+        const response = await axios.get<ApiDetailedPrescriptionResponse>(`${API_BASE_URL}${path}`, {
+          headers: { "Content-Type": "application/json" },
+        });
+        return response.data;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError;
   },
 
   /**

@@ -18,6 +18,7 @@ export type { Medicine, Vital, DiagnosticTest } from "./types-compat";
 export interface PrescriptionViewProps {
   prescription?: MappedPrescription; // Option 1: Direct prescription object
   prescriptionId?: number; // Option 2: Dynamic API loading
+  publicAccess?: boolean;
 }
 
 type PrescriptionBlock = {
@@ -280,14 +281,14 @@ function PaginatedPrescriptionDocument({
   );
 }
 
-export default function PrescriptionView({ prescription: directPrescription, prescriptionId }: PrescriptionViewProps) {
+export default function PrescriptionView({ prescription: directPrescription, prescriptionId, publicAccess = false }: PrescriptionViewProps) {
   // Use our custom hook if prescriptionId is provided
   const { 
     prescription: apiPrescription, 
     loading, 
     error, 
     refresh 
-  } = usePrescription(prescriptionId !== undefined ? prescriptionId : null);
+  } = usePrescription(prescriptionId !== undefined ? prescriptionId : null, publicAccess);
 
   // Determine active data source
   const prescription = directPrescription || apiPrescription;
