@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ShieldCheck, Plus, Trash2, BadgeCheck } from "lucide-react";
 import { PatientData, DiagnosisEntry } from "../patient-form-fields/types";
 import { VoiceContext } from "@/hooks/useConsultationVoice";
+import ClinicalRecordAutocomplete, { recordValue } from "./ClinicalRecordAutocomplete";
 
 type Props = {
   data: PatientData;
@@ -143,15 +144,16 @@ export default function DiagnosisPage({
                       mode: "FIELD",
                       field: `diagnoses.${d.id}.diagnosisName`,
                     },
-                    <Input
+                    <ClinicalRecordAutocomplete
+                      kind="diagnoses"
+                      displayKeys={["diagnosisName", "diagnosis", "name", "value"]}
                       value={d.diagnosisName}
-                      onChange={(e) =>
-                        updateDiagnosis(
-                          d.id,
-                          "diagnosisName",
-                          e.target.value
-                        )
-                      }
+                      onValueChange={(value) => updateDiagnosis(d.id, "diagnosisName", value)}
+                      onRecordSelect={(record) => {
+                        updateDiagnosis(d.id, "diagnosisName", recordValue(record, "diagnosisName", "diagnosis", "name", "value"));
+                        updateDiagnosis(d.id, "diagnosisCode", recordValue(record, "diagnosisCode", "code", "icdCode"));
+                        updateDiagnosis(d.id, "diagnosisDuration", recordValue(record, "diagnosisDuration", "duration"));
+                      }}
                       placeholder="e.g. Acute bronchitis"
                       className={inputStyle(isHighlighted("diagnoses"))}
                     />

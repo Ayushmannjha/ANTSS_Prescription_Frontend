@@ -15,6 +15,7 @@ import {
   PastMedicalHistoryEntry,
 } from "../patient-form-fields/types";
 import { VoiceContext } from "@/hooks/useConsultationVoice";
+import ClinicalRecordAutocomplete, { recordValue } from "./ClinicalRecordAutocomplete";
 
 type Props = {
   data: PatientData;
@@ -145,15 +146,17 @@ export default function MedicalHistoryPage({
                       mode: "FIELD",
                       field: `pastMedicalHistories.${pmh.id}.disease`,
                     },
-                    <Input
+                    <ClinicalRecordAutocomplete
+                      kind="past-medical-histories"
+                      displayKeys={["disease", "condition", "name", "value"]}
                       value={pmh.disease}
-                      onChange={(e) =>
-                        updatePastMedicalHistory(
-                          pmh.id,
-                          "disease",
-                          e.target.value
-                        )
-                      }
+                      onValueChange={(value) => updatePastMedicalHistory(pmh.id, "disease", value)}
+                      onRecordSelect={(record) => {
+                        updatePastMedicalHistory(pmh.id, "disease", recordValue(record, "disease", "condition", "name", "value"));
+                        updatePastMedicalHistory(pmh.id, "duration", recordValue(record, "duration"));
+                        updatePastMedicalHistory(pmh.id, "status", recordValue(record, "status"));
+                        updatePastMedicalHistory(pmh.id, "notes", recordValue(record, "notes", "description"));
+                      }}
                       placeholder="e.g. Diabetes"
                       className={commonInputClass("pastMedicalHistories")}
                       ref={(el) =>

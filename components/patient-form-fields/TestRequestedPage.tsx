@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { PatientData, TestRequestedEntry } from "../patient-form-fields/types";
 import { VoiceContext } from "@/hooks/useConsultationVoice";
+import ClinicalRecordAutocomplete, { recordValue } from "./ClinicalRecordAutocomplete";
 
 type Props = {
   data: PatientData;
@@ -181,11 +182,15 @@ export default function TestRequestedPage({
                       mode: "FIELD",
                       field: `testsRequested.${tr.id}.name`,
                     },
-                    <Input
+                    <ClinicalRecordAutocomplete
+                      kind="tests-requested"
+                      displayKeys={["name", "testName", "test", "value"]}
                       value={tr.name}
-                      onChange={(e) =>
-                        updateTestRequested(tr.id, "name", e.target.value)
-                      }
+                      onValueChange={(value) => updateTestRequested(tr.id, "name", value)}
+                      onRecordSelect={(record) => {
+                        updateTestRequested(tr.id, "name", recordValue(record, "name", "testName", "test", "value"));
+                        updateTestRequested(tr.id, "notes", recordValue(record, "notes", "description", "instruction"));
+                      }}
                       placeholder="e.g. Complete Blood Count"
                       className={inputStyle("testsRequested")}
                       ref={(el) =>

@@ -91,12 +91,26 @@ export const usePatientStore = create<PatientState>((set) => ({
   registerPatient: async (data) => {
     set({ loading: true });
     try {
-      const newPatient = await patientService.createRegistration(data);
+      const registration = await patientService.createRegistration(data);
+      const newPatient: PatientResponse = {
+        patientId: registration.patientId,
+        patientName: registration.patientName,
+        mobileNumber: registration.mobileNumber,
+        gender: registration.gender,
+        dateOfBirth: registration.dateOfBirth,
+        age: registration.age,
+        address: registration.address,
+        state: registration.state,
+        city: registration.city,
+        pincode: registration.pincode,
+        createdAt: registration.createdAt ?? new Date().toISOString(),
+        updatedAt: registration.updatedAt ?? registration.createdAt ?? new Date().toISOString(),
+      };
       set((state) => ({
         patients: [...state.patients, newPatient],
         loading: false,
       }));
-      return newPatient;
+      return registration;
     } catch (err: any) {
       set({ error: err.message || "Registration failed", loading: false });
       throw err;

@@ -15,6 +15,7 @@ import {
   GeneralExaminationEntry,
 } from "../patient-form-fields/types";
 import { VoiceContext } from "@/hooks/useConsultationVoice";
+import ClinicalRecordAutocomplete, { recordValue } from "./ClinicalRecordAutocomplete";
 
 type Props = {
   data: PatientData;
@@ -145,15 +146,17 @@ export default function GeneralExaminationPage({
                       mode: "FIELD",
                       field: `generalExaminations.${ge.id}.finding`,
                     },
-                    <Input
+                    <ClinicalRecordAutocomplete
+                      kind="general-examinations"
+                      displayKeys={["finding", "examination", "name", "value"]}
                       value={ge.finding}
-                      onChange={(e) =>
-                        updateGeneralExamination(
-                          ge.id,
-                          "finding",
-                          e.target.value
-                        )
-                      }
+                      onValueChange={(value) => updateGeneralExamination(ge.id, "finding", value)}
+                      onRecordSelect={(record) => {
+                        updateGeneralExamination(ge.id, "finding", recordValue(record, "finding", "examination", "name", "value"));
+                        updateGeneralExamination(ge.id, "status", recordValue(record, "status"));
+                        updateGeneralExamination(ge.id, "severity", recordValue(record, "severity"));
+                        updateGeneralExamination(ge.id, "notes", recordValue(record, "notes", "description"));
+                      }}
                       placeholder="e.g. Pallor"
                       className={commonInputClass("generalExaminations")}
                       ref={(el) =>

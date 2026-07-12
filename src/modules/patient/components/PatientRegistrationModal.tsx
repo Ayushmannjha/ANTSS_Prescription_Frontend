@@ -29,7 +29,7 @@ import { prescriptionService } from "@/src/services/prescription.service";
 import { useAuthStore } from "@/src/store/authStore";
 
 import { PatientData, emptyPatientData } from "../types";
-import { PatientResponse } from "../../../../types/backend";
+import { PatientRegistrationResponse } from "../../../../types/backend";
 
 interface PatientRegistrationModalProps {
   onPatientRegistered: (patient: PatientData) => void;
@@ -170,7 +170,7 @@ export default function PatientRegistrationModal({ onPatientRegistered }: Patien
     setRegistrationForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const prefillFromExistingPatient = (patient: PatientResponse) => {
+  const prefillFromExistingPatient = (patient: PatientRegistrationResponse) => {
     setRegistrationForm((prev) => ({
       ...prev,
       name: patient.patientName || prev.name,

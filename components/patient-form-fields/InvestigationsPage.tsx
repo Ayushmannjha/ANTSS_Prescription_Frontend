@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { PatientData, InvestigationEntry } from "../patient-form-fields/types";
 import { VoiceContext } from "@/hooks/useConsultationVoice";
+import ClinicalRecordAutocomplete, { recordValue } from "./ClinicalRecordAutocomplete";
 import { uploadPatientDocument } from "@/lib/services/documentService";
 
 type Props = {
@@ -278,11 +279,16 @@ export default function InvestigationsPage({
                         mode: "FIELD",
                         field: `investigations.${inv.id}.test`,
                       },
-                      <Input
+                      <ClinicalRecordAutocomplete
+                        kind="investigations"
+                        displayKeys={["test", "testName", "investigation", "name", "value"]}
                         value={inv.test}
-                        onChange={(e) =>
-                          updateInvestigation(inv.id, "test", e.target.value)
-                        }
+                        onValueChange={(value) => updateInvestigation(inv.id, "test", value)}
+                        onRecordSelect={(record) => {
+                          updateInvestigation(inv.id, "test", recordValue(record, "test", "testName", "investigation", "name"));
+                          updateInvestigation(inv.id, "value", recordValue(record, "result", "testValue", "value"));
+                          updateInvestigation(inv.id, "notes", recordValue(record, "notes", "description"));
+                        }}
                         placeholder="e.g. HbA1c"
                         className={inputStyle("investigations")}
                         ref={(el) =>

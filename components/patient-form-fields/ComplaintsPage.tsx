@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, Plus, Trash2, BadgePlus } from "lucide-react";
 import { PatientData, ComplaintEntry } from "../patient-form-fields/types";
 import { VoiceContext } from "@/hooks/useConsultationVoice";
+import ClinicalRecordAutocomplete, { recordValue } from "./ClinicalRecordAutocomplete";
 
 type Props = {
   data: PatientData;
@@ -144,15 +145,17 @@ export default function ComplaintsPage({
                       mode: "FIELD",
                       field: `complaints.${c.id}.complaintName`,
                     },
-                    <Input
+                    <ClinicalRecordAutocomplete
+                      kind="chief-complaints"
+                      displayKeys={["complaintName", "complaint", "name", "value"]}
                       value={c.complaintName}
-                      onChange={(e) =>
-                        updateComplaint(
-                          c.id,
-                          "complaintName",
-                          e.target.value
-                        )
-                      }
+                      onValueChange={(value) => updateComplaint(c.id, "complaintName", value)}
+                      onRecordSelect={(record) => {
+                        updateComplaint(c.id, "complaintName", recordValue(record, "complaintName", "complaint", "name", "value"));
+                        updateComplaint(c.id, "complaintFrequency", recordValue(record, "complaintFrequency", "frequency"));
+                        updateComplaint(c.id, "severity", recordValue(record, "severity"));
+                        updateComplaint(c.id, "complaintDuration", recordValue(record, "complaintDuration", "duration"));
+                      }}
                       placeholder="e.g. Fever, Cough"
                       className={inputStyle(isHighlighted("complaints"))}
                     />
