@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { VoiceMicField } from "../components/voice-mic-field";
 import {
   type MedicineEntry,
@@ -53,12 +53,16 @@ export function usePatientForm(props: BaseTemplateProps) {
     printPrescriptionId,
   } = props;
   const [printingPrescriptionId, setPrintingPrescriptionId] = useState<number | null>(null);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   const updateField = <K extends keyof PatientData>(
     field: K,
     value: PatientData[K]
   ) => {
-    onChange({ ...data, [field]: value });
+    const nextData = { ...dataRef.current, [field]: value };
+    dataRef.current = nextData;
+    onChange(nextData);
   };
 
   const isHighlighted = (field: string) =>
@@ -156,7 +160,7 @@ export function usePatientForm(props: BaseTemplateProps) {
   ) => {
     updateField(
       "complaints",
-      data.complaints.map((c) =>
+      dataRef.current.complaints.map((c) =>
         c.id === id
           ? { ...c, [field]: value || null }
           : c
@@ -191,7 +195,7 @@ export function usePatientForm(props: BaseTemplateProps) {
   ) => {
     updateField(
       "diagnoses",
-      data.diagnoses.map((d) =>
+      dataRef.current.diagnoses.map((d) =>
         d.id === id
           ? { ...d, [field]: value || null }
           : d
@@ -225,7 +229,7 @@ export function usePatientForm(props: BaseTemplateProps) {
   ) => {
     updateField(
       "generalExaminations",
-      data.generalExaminations.map((ge) =>
+      dataRef.current.generalExaminations.map((ge) =>
         ge.id === id
           ? { ...ge, [field]: value }
           : ge
@@ -260,7 +264,7 @@ export function usePatientForm(props: BaseTemplateProps) {
   ) => {
     updateField(
       "pastMedicalHistories",
-      data.pastMedicalHistories.map((pmh) =>
+      dataRef.current.pastMedicalHistories.map((pmh) =>
         pmh.id === id
           ? { ...pmh, [field]: value || null }
           : pmh
@@ -297,7 +301,7 @@ export function usePatientForm(props: BaseTemplateProps) {
   ) => {
     updateField(
       "investigations",
-      data.investigations.map((inv) =>
+      dataRef.current.investigations.map((inv) =>
         inv.id === id
           ? { ...inv, [field]: value || null }
           : inv
@@ -311,7 +315,7 @@ export function usePatientForm(props: BaseTemplateProps) {
   ) => {
     updateField(
       "investigations",
-      data.investigations.map((inv) =>
+      dataRef.current.investigations.map((inv) =>
         inv.id === id ? { ...inv, ...updates } : inv
       )
     );

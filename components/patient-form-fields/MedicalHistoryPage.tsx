@@ -57,7 +57,7 @@ export default function MedicalHistoryPage({
      focus-visible:ring-2 focus-visible:ring-purple-100 ${inputClass(field)}`;
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-purple-100 bg-white shadow-sm">
+    <Card className="overflow-visible rounded-2xl border border-purple-100 bg-white shadow-sm">
       <CardHeader className="border-b border-slate-100 bg-white px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-800">
@@ -148,14 +148,16 @@ export default function MedicalHistoryPage({
                     },
                     <ClinicalRecordAutocomplete
                       kind="past-medical-histories"
-                      displayKeys={["disease", "condition", "name", "value"]}
+                      displayKeys={["disease", "medicalHistory", "history", "condition", "name", "value"]}
                       value={pmh.disease}
                       onValueChange={(value) => updatePastMedicalHistory(pmh.id, "disease", value)}
                       onRecordSelect={(record) => {
-                        updatePastMedicalHistory(pmh.id, "disease", recordValue(record, "disease", "condition", "name", "value"));
-                        updatePastMedicalHistory(pmh.id, "duration", recordValue(record, "duration"));
-                        updatePastMedicalHistory(pmh.id, "status", recordValue(record, "status"));
-                        updatePastMedicalHistory(pmh.id, "notes", recordValue(record, "notes", "description"));
+                        updatePastMedicalHistory(pmh.id, "disease", recordValue(record, "disease", "medicalHistory", "history", "condition", "name", "value"));
+                        if (typeof record !== "string") {
+                          updatePastMedicalHistory(pmh.id, "duration", recordValue(record, "duration"));
+                          updatePastMedicalHistory(pmh.id, "status", recordValue(record, "status"));
+                          updatePastMedicalHistory(pmh.id, "notes", recordValue(record, "notes", "description"));
+                        }
                       }}
                       placeholder="e.g. Diabetes"
                       className={commonInputClass("pastMedicalHistories")}

@@ -56,7 +56,7 @@ export default function DiagnosisPage({
      }`;
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
+    <Card className="overflow-visible rounded-2xl border border-blue-100 bg-white shadow-sm">
       <CardHeader className="border-b border-slate-100 bg-white px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-800">

@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, useEffect, useMemo, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import {
   ClinicalRecord,
@@ -10,13 +11,15 @@ import {
 
 type Props = Omit<React.ComponentProps<typeof Input>, "onChange" | "value"> & {
   kind: ClinicalRecordKind;
-  value: string;
+  value?: string | null;
   displayKeys: string[];
   onValueChange: (value: string) => void;
   onRecordSelect: (record: ClinicalRecord) => void;
 };
 
 const text = (record: ClinicalRecord, keys: string[]) => {
+  if (typeof record === "string") return record.trim();
+
   for (const key of keys) {
     const value = record[key];
     if (value !== null && value !== undefined && String(value).trim()) return String(value);
@@ -33,9 +36,23 @@ const ClinicalRecordAutocomplete = forwardRef<HTMLInputElement, Props>(
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [active, setActive] = useState(0);
+    const [hasTyped, setHasTyped] = useState(false);
+    const [dropdownPosition, setDropdownPosition] = useState<{
+      left: number;
+      top: number;
+      width: number;
+    } | null>(null);
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const safeValue = typeof value === "string" ? value : "";
+
+    const assignInputRef = (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    };
 
     useEffect(() => {
-      if (!value.trim()) {
+      if (!hasTyped || !safeValue.trim()) {
         setOpen(false);
         return;
       }
@@ -46,23 +63,50 @@ const ClinicalRecordAutocomplete = forwardRef<HTMLInputElement, Props>(
         .catch(() => current && setRecords([]))
         .finally(() => current && setLoading(false));
       return () => { current = false; };
-    }, [kind, value]);
+    }, [hasTyped, kind, safeValue]);
 
     const matches = useMemo(() => {
-      const query = value.trim().toLocaleLowerCase();
+      if (!hasTyped) return [];
+      const query = safeValue.trim().toLocaleLowerCase();
       if (!query) return [];
       return records.filter((record) =>
         text(record, displayKeys).toLocaleLowerCase().includes(query)
       ).slice(0, 8);
-    }, [displayKeys, records, value]);
+    }, [displayKeys, hasTyped, records, safeValue]);
 
     useEffect(() => {
       setActive(0);
       setOpen(!loading && matches.length > 0);
-    }, [loading, matches.length, value]);
+    }, [loading, matches.length, safeValue]);
+
+    useEffect(() => {
+      if (!open) {
+        setDropdownPosition(null);
+        return;
+      }
+
+      const updatePosition = () => {
+        const rect = inputRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        setDropdownPosition({
+          left: rect.left,
+          top: rect.bottom + 4,
+          width: rect.width,
+        });
+      };
+
+      updatePosition();
+      window.addEventListener("resize", updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      return () => {
+        window.removeEventListener("resize", updatePosition);
+        window.removeEventListener("scroll", updatePosition, true);
+      };
+    }, [open]);
 
     const select = (record: ClinicalRecord) => {
       onRecordSelect(record);
+      setHasTyped(false);
       setOpen(false);
     };
 
@@ -70,11 +114,14 @@ const ClinicalRecordAutocomplete = forwardRef<HTMLInputElement, Props>(
       <div className="relative">
         <Input
           {...props}
-          ref={ref}
-          value={value}
+          ref={assignInputRef}
+          value={safeValue}
           autoComplete="off"
-          onChange={(event) => onValueChange(event.target.value)}
-          onFocus={() => matches.length > 0 && setOpen(true)}
+          onChange={(event) => {
+            setHasTyped(true);
+            onValueChange(event.target.value);
+          }}
+          onFocus={() => hasTyped && matches.length > 0 && setOpen(true)}
           onBlur={(event) => {
             window.setTimeout(() => setOpen(false), 120);
             onBlur?.(event);
@@ -97,11 +144,14 @@ const ClinicalRecordAutocomplete = forwardRef<HTMLInputElement, Props>(
             onKeyDown?.(event);
           }}
         />
-        {open && matches.length > 0 && (
-          <div className="absolute left-0 right-0 z-50 mt-1 max-h-56 overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+        {open && dropdownPosition && matches.length > 0 && createPortal(
+          <div
+            className="fixed z-[9999] max-h-56 overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+            style={dropdownPosition}
+          >
             {matches.map((record, index) => (
               <button
-                key={String(record.id ?? record.recordId ?? index)}
+                key={String(typeof record === "string" ? record : record.id ?? record.recordId ?? index)}
                 type="button"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => select(record)}
@@ -110,7 +160,8 @@ const ClinicalRecordAutocomplete = forwardRef<HTMLInputElement, Props>(
                 {text(record, displayKeys)}
               </button>
             ))}
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );

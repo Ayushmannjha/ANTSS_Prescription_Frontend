@@ -57,7 +57,7 @@ export default function GeneralExaminationPage({
      focus-visible:ring-2 focus-visible:ring-blue-100 ${inputClass(field)}`;
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
+    <Card className="overflow-visible rounded-2xl border border-blue-100 bg-white shadow-sm">
       <CardHeader className="border-b border-slate-100 bg-white px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-800">
@@ -148,14 +148,16 @@ export default function GeneralExaminationPage({
                     },
                     <ClinicalRecordAutocomplete
                       kind="general-examinations"
-                      displayKeys={["finding", "examination", "name", "value"]}
+                      displayKeys={["finding", "generalExamination", "examinationName", "examination", "name", "value"]}
                       value={ge.finding}
                       onValueChange={(value) => updateGeneralExamination(ge.id, "finding", value)}
                       onRecordSelect={(record) => {
-                        updateGeneralExamination(ge.id, "finding", recordValue(record, "finding", "examination", "name", "value"));
-                        updateGeneralExamination(ge.id, "status", recordValue(record, "status"));
-                        updateGeneralExamination(ge.id, "severity", recordValue(record, "severity"));
-                        updateGeneralExamination(ge.id, "notes", recordValue(record, "notes", "description"));
+                        updateGeneralExamination(ge.id, "finding", recordValue(record, "finding", "generalExamination", "examinationName", "examination", "name", "value"));
+                        if (typeof record !== "string") {
+                          updateGeneralExamination(ge.id, "status", recordValue(record, "status"));
+                          updateGeneralExamination(ge.id, "severity", recordValue(record, "severity"));
+                          updateGeneralExamination(ge.id, "notes", recordValue(record, "notes", "description"));
+                        }
                       }}
                       placeholder="e.g. Pallor"
                       className={commonInputClass("generalExaminations")}

@@ -176,7 +176,7 @@ export default function InvestigationsPage({
 
   return (
     <>
-      <Card className="overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-sm">
+      <Card className="overflow-visible rounded-2xl border border-cyan-100 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100 bg-white px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-800">
@@ -281,13 +281,15 @@ export default function InvestigationsPage({
                       },
                       <ClinicalRecordAutocomplete
                         kind="investigations"
-                        displayKeys={["test", "testName", "investigation", "name", "value"]}
+                        displayKeys={["investigationName", "test", "testName", "investigation", "name", "value"]}
                         value={inv.test}
                         onValueChange={(value) => updateInvestigation(inv.id, "test", value)}
                         onRecordSelect={(record) => {
-                          updateInvestigation(inv.id, "test", recordValue(record, "test", "testName", "investigation", "name"));
-                          updateInvestigation(inv.id, "value", recordValue(record, "result", "testValue", "value"));
-                          updateInvestigation(inv.id, "notes", recordValue(record, "notes", "description"));
+                          updateInvestigation(inv.id, "test", recordValue(record, "investigationName", "test", "testName", "investigation", "name", "value"));
+                          if (typeof record !== "string") {
+                            updateInvestigation(inv.id, "value", recordValue(record, "result", "testValue", "value"));
+                            updateInvestigation(inv.id, "notes", recordValue(record, "notes", "description"));
+                          }
                         }}
                         placeholder="e.g. HbA1c"
                         className={inputStyle("investigations")}
