@@ -27,56 +27,55 @@ export const usePatientStore = create<PatientState>((set) => ({
   fetchPatients: async () => {
     set({ loading: true, error: null });
     try {
-      // 1. Fetch all accessible registrations for patient list
-      const registrationsResponse = await patientService.getAllRegistrations();
-      const registrations = (registrationsResponse as any)?.data || registrationsResponse;
-      
-      const mappedPatients = Array.isArray(registrations) ? registrations.map((r: any) => {
-        const p = r || {};
-        return {
-          patientId: p.patientId || r.registrationId,
-          patientName: p.patientName,
-          mobileNumber: p.mobileNumber,
-          gender: p.gender,
-          age: p.age,
-          address: p.address,
-          state: p.state,
-          city: p.city,
-          pincode: p.pincode,
-          dateOfBirth: p.dateOfBirth || null,
-          createdAt: r.createdAt || p.createdAt,
-          updatedAt: r.updatedAt || p.updatedAt || new Date().toISOString(),
-          registrationId: r.registrationId,
-          registrationNumber: r.registrationNumber,
-        };
-      }) : [];
+      const { user } = useAuthStore.getState();
+      let doctorId = user?.doctorId;
 
-      // 2. Try fetching consultations for follow-ups
-      let consultations: any[] = [];
-      try {
-        const { user } = useAuthStore.getState();
-        let doctorId = user?.doctorId;
-        
-        if (!doctorId && user?.userType === "DOCTOR") {
-          const profileResponse = await doctorService.getDoctorProfile();
-          doctorId = profileResponse?.data?.id || profileResponse?.id;
-        }
-
-        if (doctorId) {
-          const consultationsResponse = await consultationService.getConsultationsByDoctor(doctorId);
-          consultations = (consultationsResponse as any)?.data || consultationsResponse;
-        } else {
-          // If not a doctor, fetch all consultations within the user's clinical scope
-          const consultationsResponse = await consultationService.getAllConsultations();
-          consultations = (consultationsResponse as any)?.data || consultationsResponse;
-        }
-
-        if (!Array.isArray(consultations)) {
-          consultations = [];
-        }
-      } catch (err) {
-        console.warn("Failed to fetch consultations for follow-ups", err);
+      if (!doctorId && user?.userType === "DOCTOR") {
+        const profileResponse = await doctorService.getDoctorProfile();
+        doctorId = profileResponse?.data?.id || profileResponse?.id;
       }
+
+      const consultationsResponse = doctorId
+        ? await consultationService.getConsultationsByDoctor(doctorId)
+        : await consultationService.getAllConsultations();
+      const consultationsData = (consultationsResponse as any)?.data || consultationsResponse;
+      const consultations = Array.isArray(consultationsData)
+        ? [...consultationsData].sort((a: any, b: any) => {
+            const aCreatedAt = Date.parse(a.createdAt || "");
+            const bCreatedAt = Date.parse(b.createdAt || "");
+
+            if (!Number.isNaN(aCreatedAt) && !Number.isNaN(bCreatedAt)) {
+              return bCreatedAt - aCreatedAt;
+            }
+
+            return Number(b.consultationId || 0) - Number(a.consultationId || 0);
+          })
+        : [];
+
+      const mappedPatients = consultations.map((consultation: any) => ({
+        patientId: consultation.patientId || consultation.registrationId,
+        patientName: consultation.patientName,
+        mobileNumber: consultation.mobileNumber,
+        gender: consultation.gender,
+        age: consultation.age,
+        address: consultation.patientAddress || consultation.address,
+        state: consultation.state,
+        city: consultation.city,
+        pincode: consultation.pincode,
+        dateOfBirth: consultation.dateOfBirth || null,
+        createdAt: consultation.createdAt || consultation.updatedAt || new Date().toISOString(),
+        updatedAt: consultation.updatedAt || consultation.createdAt || new Date().toISOString(),
+        registrationId: consultation.registrationId,
+        registrationNumber: consultation.registrationNumber,
+        consultationId: consultation.consultationId,
+        weight: consultation.weight,
+        height: consultation.height,
+        bp: consultation.bp,
+        pulse: consultation.pulse,
+        temperature: consultation.temperature,
+        spo2: consultation.spo2,
+        respiratoryRate: consultation.respiratoryRate,
+      }));
 
       set({ patients: mappedPatients, consultations, loading: false });
     } catch (err: any) {
@@ -107,7 +106,7 @@ export const usePatientStore = create<PatientState>((set) => ({
         updatedAt: registration.updatedAt ?? registration.createdAt ?? new Date().toISOString(),
       };
       set((state) => ({
-        patients: [...state.patients, newPatient],
+        patients: [newPatient, ...state.patients],
         loading: false,
       }));
       return registration;

@@ -26,6 +26,7 @@ export interface DiagnosisEntry {
 
 export interface PatientData {
   id?: string;
+  consultationId?: number;
   registrationId?: number;
   registrationNumber?: string | null;
   name: string | null;
@@ -38,6 +39,7 @@ export interface PatientData {
   pulse: number | null;
   temperature: number | null;
   oxygenSaturation: number | null;
+  respiratoryRate?: number | null;
 
   lmp: string | null;
   dateOfBirth: string | null;
@@ -85,6 +87,7 @@ export const emptyPatientData: Omit<PatientData, "id"> = {
   pulse: null,
   temperature: null,
   oxygenSaturation: null,
+  respiratoryRate: null,
 
   lmp: null,
   dateOfBirth: null,

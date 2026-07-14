@@ -87,7 +87,7 @@ export default function PatientTable({
               </TableHeader>
               <TableBody>
                 {filteredPatients.map((patient) => (
-                  <TableRow key={patient.id}>
+                  <TableRow key={patient.consultationId || patient.registrationId || patient.id}>
                     <TableCell className="font-mono font-medium text-primary">
                       {patient.registrationNumber || "N/A"}
                     </TableCell>

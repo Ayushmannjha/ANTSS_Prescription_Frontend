@@ -38,6 +38,41 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const toNullableNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const getLatestConsultation = (patient: PatientData, consultations: any[]) => {
+  if (patient.consultationId) {
+    const exactConsultation = consultations.find(
+      (consultation) => Number(consultation.consultationId) === Number(patient.consultationId)
+    );
+    if (exactConsultation) return exactConsultation;
+  }
+
+  const matchingConsultations = consultations.filter((consultation) => {
+    if (patient.registrationId && consultation.registrationId) {
+      return Number(consultation.registrationId) === Number(patient.registrationId);
+    }
+
+    return Number(consultation.patientId) === Number(patient.id);
+  });
+
+  return matchingConsultations.sort((a, b) => {
+    const aCreatedAt = Date.parse(a.createdAt || "");
+    const bCreatedAt = Date.parse(b.createdAt || "");
+
+    if (!Number.isNaN(aCreatedAt) && !Number.isNaN(bCreatedAt)) {
+      return bCreatedAt - aCreatedAt;
+    }
+
+    return Number(b.consultationId || 0) - Number(a.consultationId || 0);
+  })[0];
+};
+
 export default function PatientListPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -92,10 +127,30 @@ export default function PatientListPage() {
   };
 
   const handleConsult = (patient: PatientData) => {
+    const latestConsultation = getLatestConsultation(patient, consultations);
+    const [bloodPressureSystolic, bloodPressureDiastolic] = String(latestConsultation?.bp || "")
+      .split("/")
+      .map(toNullableNumber);
+    const consultationPatient = latestConsultation
+      ? {
+          ...patient,
+          consultationId: latestConsultation.consultationId,
+          weight: toNullableNumber(latestConsultation.weight),
+          height: toNullableNumber(latestConsultation.height),
+          bloodPressureSystolic,
+          bloodPressureDiastolic,
+          pulse: toNullableNumber(latestConsultation.pulse),
+          temperature: toNullableNumber(latestConsultation.temperature),
+          oxygenSaturation: toNullableNumber(latestConsultation.spo2),
+          respiratoryRate: toNullableNumber(latestConsultation.respiratoryRate),
+          visitDate: latestConsultation.createdAt || patient.visitDate,
+        }
+      : patient;
+
     if (patient.id) {
       localStorage.removeItem(`draftConsultation_${patient.id}`);
     }
-    localStorage.setItem("currentConsultationPatient", JSON.stringify(patient));
+    localStorage.setItem("currentConsultationPatient", JSON.stringify(consultationPatient));
     router.push("/consultation?fresh=1");
   };
 
@@ -112,6 +167,7 @@ export default function PatientListPage() {
     return patients.map((p: any) => {
       return {
         id: String(p.patientId),
+        consultationId: p.consultationId || undefined,
         registrationId: p.registrationId || undefined,
         registrationNumber: p.registrationNumber || (p.mobileNumber ? `REG-${p.mobileNumber.slice(-6)}` : "REG-N/A"),
         name: p.patientName,
@@ -123,13 +179,14 @@ export default function PatientListPage() {
         district: p.city,
         pincode: p.pincode,
         visitDate: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : null,
-        weight: null,
-        height: null,
-        bloodPressureSystolic: null,
-        bloodPressureDiastolic: null,
-        pulse: null,
-        temperature: null,
-        oxygenSaturation: null,
+        weight: toNullableNumber(p.weight),
+        height: toNullableNumber(p.height),
+        bloodPressureSystolic: toNullableNumber(String(p.bp || "").split("/")[0]),
+        bloodPressureDiastolic: toNullableNumber(String(p.bp || "").split("/")[1]),
+        pulse: toNullableNumber(p.pulse),
+        temperature: toNullableNumber(p.temperature),
+        oxygenSaturation: toNullableNumber(p.spo2),
+        respiratoryRate: toNullableNumber(p.respiratoryRate),
         bloodGroup: p.bloodGroup || null,
         lmp: null,
         dateOfBirth: p.dateOfBirth || null,
