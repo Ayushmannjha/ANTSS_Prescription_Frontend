@@ -28,6 +28,7 @@ import { usePrescriptionStore } from "@/src/store/prescriptionStore";
 import { PatientData } from "../types";
 import { prescriptionService } from "@/src/services/prescription.service";
 import { patientService } from "@/src/services/patient.service";
+import { subscribeToPatientRegistrations } from "@/src/services/patient-registration.websocket";
 
 import PatientRegistrationModal from "../components/PatientRegistrationModal";
 import PatientTable from "../components/PatientTable";
@@ -77,7 +78,7 @@ export default function PatientListPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, initialize, logout } = useAuthStore();
-  const { patients, consultations, fetchPatients, loading } = usePatientStore();
+  const { patients, consultations, fetchPatients, upsertRegistration, loading } = usePatientStore();
   const { savePrescription } = usePrescriptionStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -121,6 +122,15 @@ export default function PatientListPage() {
     window.addEventListener('app-route-change', handleRouteChange);
     return () => window.removeEventListener('app-route-change', handleRouteChange);
   }, [pathname]);
+
+  useEffect(() => {
+    if (pathname !== "/patients") return;
+
+    return subscribeToPatientRegistrations(
+      upsertRegistration,
+      () => void fetchPatients(),
+    );
+  }, [pathname, fetchPatients, upsertRegistration]);
 
   const handlePatientRegistered = (newPatient: PatientData) => {
     fetchData();

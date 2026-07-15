@@ -3,6 +3,7 @@ import { patientService } from "../services/patient.service";
 import { doctorService } from "../services/doctor.service";
 import { consultationService } from "../services/consultation.service";
 import { PatientResponse } from "../../types/backend";
+import type { PatientRegistrationEvent } from "../services/patient-registration.websocket";
 
 import { useAuthStore } from "./authStore";
 
@@ -13,6 +14,7 @@ interface PatientState {
   error: string | null;
   activePatient: PatientResponse | null;
   fetchPatients: () => Promise<void>;
+  upsertRegistration: (event: PatientRegistrationEvent) => void;
   setActivePatient: (patient: PatientResponse | null) => void;
   registerPatient: (data: any) => Promise<any>;
 }
@@ -81,6 +83,27 @@ export const usePatientStore = create<PatientState>((set) => ({
     } catch (err: any) {
       set({ error: err.message || "Failed to fetch patients", loading: false });
     }
+  },
+
+  upsertRegistration: (event) => {
+    const patient = {
+      ...event.patient,
+      patientId: event.patient.patientId,
+      registrationId: event.registrationId,
+      registrationNumber: event.registrationNumber,
+      createdAt: event.createdAt,
+      updatedAt: event.updatedAt,
+    };
+
+    set((state) => ({
+      patients: [
+        patient,
+        ...state.patients.filter(
+          (existing: any) =>
+            Number(existing.registrationId) !== event.registrationId,
+        ),
+      ],
+    }));
   },
 
   setActivePatient: (patient) => {
