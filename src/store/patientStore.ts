@@ -4,6 +4,7 @@ import { doctorService } from "../services/doctor.service";
 import { consultationService } from "../services/consultation.service";
 import { PatientResponse } from "../../types/backend";
 import type { PatientRegistrationEvent } from "../services/patient-registration.websocket";
+import type { ConsultationRequestEvent } from "../services/consultation-request.websocket";
 
 import { useAuthStore } from "./authStore";
 
@@ -15,6 +16,7 @@ interface PatientState {
   activePatient: PatientResponse | null;
   fetchPatients: () => Promise<void>;
   upsertRegistration: (event: PatientRegistrationEvent) => void;
+  upsertConsultationRequest: (event: ConsultationRequestEvent) => void;
   setActivePatient: (patient: PatientResponse | null) => void;
   registerPatient: (data: any) => Promise<any>;
 }
@@ -37,9 +39,11 @@ export const usePatientStore = create<PatientState>((set) => ({
         doctorId = profileResponse?.data?.id || profileResponse?.id;
       }
 
-      const consultationsResponse = doctorId
-        ? await consultationService.getConsultationsByDoctor(doctorId)
-        : await consultationService.getAllConsultations();
+      const consultationsResponse = user?.userType === "DOCTOR"
+        ? await consultationService.getMyConsultationRequests()
+        : doctorId
+          ? await consultationService.getConsultationsByDoctor(doctorId)
+          : await consultationService.getAllConsultations();
       const consultationsData = (consultationsResponse as any)?.data || consultationsResponse;
       const consultations = Array.isArray(consultationsData)
         ? [...consultationsData].sort((a: any, b: any) => {
@@ -77,6 +81,10 @@ export const usePatientStore = create<PatientState>((set) => ({
         temperature: consultation.temperature,
         spo2: consultation.spo2,
         respiratoryRate: consultation.respiratoryRate,
+        status: consultation.status,
+        priority: consultation.priority,
+        consultReason: consultation.consultReason,
+        requestedAt: consultation.requestedAt,
       }));
 
       set({ patients: mappedPatients, consultations, loading: false });
@@ -101,6 +109,59 @@ export const usePatientStore = create<PatientState>((set) => ({
         ...state.patients.filter(
           (existing: any) =>
             Number(existing.registrationId) !== event.registrationId,
+        ),
+      ],
+    }));
+  },
+
+  upsertConsultationRequest: (event) => {
+    const consultation = {
+      consultationId: event.consultationId,
+      consultationNumber: event.consultationNumber,
+      registrationId: event.registrationId,
+      registrationNumber: event.registrationNumber,
+      patientId: event.registrationId,
+      patientName: event.patientName,
+      mobileNumber: event.mobileNumber,
+      gender: event.gender,
+      age: event.age,
+      doctorId: event.doctorId,
+      doctorName: event.doctorName,
+      status: event.status,
+      priority: event.priority,
+      consultReason: event.consultReason,
+      createdAt: event.requestedAt || new Date().toISOString(),
+      requestedAt: event.requestedAt,
+    };
+
+    const patient = {
+      patientId: event.registrationId,
+      patientName: event.patientName,
+      mobileNumber: event.mobileNumber || undefined,
+      gender: event.gender || "",
+      age: Number(event.age || 0),
+      createdAt: event.requestedAt || new Date().toISOString(),
+      updatedAt: event.requestedAt || new Date().toISOString(),
+      registrationId: event.registrationId,
+      registrationNumber: event.registrationNumber || undefined,
+      consultationId: event.consultationId,
+      status: event.status,
+      priority: event.priority,
+      consultReason: event.consultReason,
+      requestedAt: event.requestedAt,
+    } as any;
+
+    set((state) => ({
+      consultations: [
+        consultation,
+        ...state.consultations.filter(
+          (existing: any) => Number(existing.consultationId) !== event.consultationId,
+        ),
+      ],
+      patients: [
+        patient,
+        ...state.patients.filter(
+          (existing: any) => Number(existing.consultationId) !== event.consultationId,
         ),
       ],
     }));
