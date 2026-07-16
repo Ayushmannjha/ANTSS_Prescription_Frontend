@@ -28,7 +28,8 @@ import { usePrescriptionStore } from "@/src/store/prescriptionStore";
 import { PatientData } from "../types";
 import { prescriptionService } from "@/src/services/prescription.service";
 import { patientService } from "@/src/services/patient.service";
-import { subscribeToPatientRegistrations } from "@/src/services/patient-registration.websocket";
+import { consultationService } from "@/src/services/consultation.service";
+import { subscribeToConsultationRequests } from "@/src/services/consultation-request.websocket";
 
 import PatientRegistrationModal from "../components/PatientRegistrationModal";
 import PatientTable from "../components/PatientTable";
@@ -78,7 +79,7 @@ export default function PatientListPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, initialize, logout } = useAuthStore();
-  const { patients, consultations, fetchPatients, upsertRegistration, loading } = usePatientStore();
+  const { patients, consultations, fetchPatients, upsertConsultationRequest, loading } = usePatientStore();
   const { savePrescription } = usePrescriptionStore();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,18 +127,25 @@ export default function PatientListPage() {
   useEffect(() => {
     if (pathname !== "/patients") return;
 
-    return subscribeToPatientRegistrations(
-      upsertRegistration,
+    return subscribeToConsultationRequests(
+      upsertConsultationRequest,
       () => void fetchPatients(),
     );
-  }, [pathname, fetchPatients, upsertRegistration]);
+  }, [pathname, fetchPatients, upsertConsultationRequest]);
 
   const handlePatientRegistered = (newPatient: PatientData) => {
     fetchData();
   };
 
-  const handleConsult = (patient: PatientData) => {
+  const handleConsult = async (patient: PatientData) => {
     const latestConsultation = getLatestConsultation(patient, consultations);
+    if (latestConsultation?.consultationId && latestConsultation.status === "REQUESTED") {
+      try {
+        await consultationService.startConsultation(Number(latestConsultation.consultationId));
+      } catch (err) {
+        console.error("Failed to start consultation request", err);
+      }
+    }
     const [bloodPressureSystolic, bloodPressureDiastolic] = String(latestConsultation?.bp || "")
       .split("/")
       .map(toNullableNumber);

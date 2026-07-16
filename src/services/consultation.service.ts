@@ -42,6 +42,18 @@ export const consultationService = {
     return apiClient.get<any[]>(`/api/consultations/doctor/${doctorId}`);
   },
 
+  getMyConsultationRequests: (): Promise<any[]> => {
+    return apiClient.get<any[]>("/api/consultations/requests/my");
+  },
+
+  startConsultation: (id: number): Promise<any> => {
+    return apiClient.patch<any>(`/api/consultations/${id}/start`);
+  },
+
+  completeConsultation: (id: number): Promise<any> => {
+    return apiClient.patch<any>(`/api/consultations/${id}/complete`);
+  },
+
   updateConsultation: (id: number, data: BackendConsultation): Promise<any> => {
     return apiClient.put<any>(`/api/consultations/${id}`, data);
   },
